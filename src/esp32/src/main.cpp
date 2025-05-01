@@ -1,5 +1,6 @@
 #include <Arduino.h>
 #include "DHT.h"
+#include <ArduinoJson.h> 
 
 // Definições de pinos
 #define PHOSPHORUS_PIN 14     // Botão simulando presença de fósforo
@@ -19,6 +20,17 @@ float ph = 0.0;
 bool phosphorus_present = false;
 bool potassium_present = false;
 
+// Simulação de dados climáticos vindos do Python
+const char* climate_json = R"(
+  {
+    "temperature": 26.5,
+    "air_humidity": 82,
+    "rain_forecast": true
+  }
+)";
+
+bool rain_forecast = false;
+
 void setup() {
   Serial.begin(115200);
 
@@ -33,6 +45,17 @@ void setup() {
 
   delay(100);
   Serial.println("Sistema de irrigação inteligente inicializado");
+
+  StaticJsonDocument<256> doc;
+  DeserializationError error = deserializeJson(doc, climate_json);
+  if (error) {
+    Serial.print("Erro ao ler dados climáticos simulados: ");
+    Serial.println(error.c_str());
+  } else {
+    rain_forecast = doc["rain_forecast"];
+    Serial.print("Chuva prevista (via JSON): ");
+    Serial.println(rain_forecast ? "SIM" : "NÃO");
+  }
 }
 
 void loop() {
@@ -62,30 +85,38 @@ void loop() {
   bool irrigate = false;
 
   // Lógica de decisão:
-  // 1. Irrigar se umidade < 40% e fósforo presente
+
+  // 1. Não irrigar se houver previsão de chuva detectada
+  if (rain_forecast) {
+    Serial.println("Previsão de chuva detectada. Irrigação cancelada.");
+    irrigate = false;
+  }
+
+  // 2. Irrigar se umidade < 40% e fósforo presente
   if (humidity < 40 && phosphorus_present) {
     irrigate = true;
   }
 
-  // 2. Não irrigar se potássio presente e umidade > 60%
+  // 3. Não irrigar se potássio presente e umidade > 60%
   if (potassium_present && humidity > 60) {
     irrigate = false;
   }
 
-  // 3. Irrigar apenas se pH estiver entre 5.5 e 7.0 (faixa ótima)
+  // 4. Irrigar apenas se pH estiver entre 5.5 e 7.0 (faixa ótima)
   if (humidity < 40 && (ph < 5.5 || ph > 7.0)) {
     irrigate = false;
   }
 
-  // 4. Nunca irrigar se umidade > 70%
+  // 5. Nunca irrigar se umidade > 70%
   if (humidity > 70) {
     irrigate = false;
   }
 
-  // 5. Irrigar se faltar fósforo ou potássio, mas com umidade entre 30% e 50%
+  // 6. Irrigar se faltar fósforo ou potássio, mas com umidade entre 30% e 50%
   if ((!phosphorus_present || !potassium_present) && (humidity >= 30 && humidity <= 50)) {
     irrigate = true;
   }
+
 
   // Aciona ou desliga a bomba de acordo com a decisão final
   if (irrigate) {
