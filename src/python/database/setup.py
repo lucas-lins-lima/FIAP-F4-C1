@@ -3,11 +3,12 @@ from database.oracle import db
 
 import logging
 
+logger = logging.getLogger(__name__)
+
 def create_all_tables():
     """
         Cria todas as tabelas do banco de dados definidas no model.
     """
-    logger = logging.getLogger(__name__)
     try:
         Base.metadata.create_all(bind=db.engine)
         logger.info("Tabelas criadas com sucesso.")
@@ -19,7 +20,6 @@ def drop_all_tables():
     """
         Dropa todas as tabelas do banco de dados.
     """
-    logger = logging.getLogger(__name__)
     try:
         Base.metadata.drop_all(bind=db.engine)
         logger.info("Tabelas removidas com sucesso.")

@@ -58,6 +58,7 @@ class ClimateData(Base):
     rain_forecast = Column(Boolean, nullable=False)  # Previsão de chuva (True/False)
 
     def to_dict(self):
+        
         return {
             "id": self.id,
             "timestamp": self.timestamp.isoformat(),

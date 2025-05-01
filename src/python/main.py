@@ -1,22 +1,22 @@
-import logging
-from tkinter.font import names
 
 from database.setup import create_all_tables, drop_all_tables
 from database.utils import print_mer
-from logs.logger import config_logger
-from services.component_service import list_components, create_component
+from logs.logger import Logger
+from services.weather_service import run_weather_integration
+
+logger = Logger(__name__)()
 
 
 def main():
-    config_logger()
-    logger = logging.getLogger(__name__)
     logger.info("Iniciando o sistema...")
 
     try:
         logger.info("Criando tabelas no banco, se necessário...")
-        create_all_tables()
+        # create_all_tables()
 
-        print_mer()
+        run_weather_integration()
+
+        # print_mer()
 
         logger.info("Conexão com o banco de dados bem-sucedida.")
         logger.info("Tabelas criadas/verificadas com sucesso.")
