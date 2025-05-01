@@ -12,21 +12,19 @@
 
 ## 👨‍🎓 Integrantes:
 
-- <a href="https://www.linkedin.com/company/inova-fusca">Nome do integrante 1</a>
-- <a href="https://www.linkedin.com/company/inova-fusca">Nome do integrante 2</a>
-- <a href="https://www.linkedin.com/company/inova-fusca">Nome do integrante 3</a>
-- <a href="https://www.linkedin.com/company/inova-fusca">Nome do integrante 4</a>
-- <a href="https://www.linkedin.com/company/inova-fusca">Nome do integrante 5</a>
+- <a href="https://www.linkedin.com/in/anacornachi/">Ana Cornachi</a>
+- <a href="https://www.linkedin.com/in/carlamaximo/">Carla Máximo</a>
+- <a href="https://www.linkedin.com/in/lucas-lins-lima/">Lucas Lins</a>
 
 ## 👩‍🏫 Professores:
 
 ### Tutor(a)
 
-- <a href="https://www.linkedin.com/company/inova-fusca">Nome do Tutor</a>
+- <a href="https://www.linkedin.com/in/lucas-gomes-moreira-15a8452a/">Lucas Gomes Moreira</a>
 
 ### Coordenador(a)
 
-- <a href="https://www.linkedin.com/company/inova-fusca">Nome do Coordenador</a>
+- <a href="https://www.linkedin.com/in/andregodoichiovato/">André Godoi Chiovato</a>
 
 ## 📜 Descrição
 
@@ -56,7 +54,7 @@ _Acrescentar as informações necessárias sobre pré-requisitos (IDEs, serviço
 
 ## 🗃 Histórico de lançamentos
 
-- 0.1.0 - 28/04/2025
+- 0.1.0 - 30/04/2025
   - Implementação inicial do sistema de irrigação inteligente utilizando ESP32
   - Adicionada leitura de sensores: umidade do solo (DHT22), presença de fósforo e potássio (botões físicos) e simulação de pH (sensor LDR)
   - Desenvolvimento da lógica de ativação e desativação da bomba de irrigação com base nas condições do solo
