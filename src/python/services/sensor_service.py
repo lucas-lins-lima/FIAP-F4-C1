@@ -1,5 +1,5 @@
-from src.database.db import db
-from src.models.models import SensorRecord
+from database.oracle import db
+from database.models import SensorRecord
 from datetime import datetime
 from typing import List, Optional
 
