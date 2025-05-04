@@ -3,6 +3,8 @@ from database.oracle import db
 
 import logging
 
+from database.seed import run_seed
+
 logger = logging.getLogger(__name__)
 
 def create_all_tables():
@@ -31,3 +33,4 @@ def drop_all_tables():
 if __name__ == "__main__":
     drop_all_tables()
     create_all_tables()
+    run_seed()

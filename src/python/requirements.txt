@@ -8,4 +8,4 @@ pyserial==3.5
 streamlit==1.45.0
 matplotlib==3.10.1
 seaborn== 0.13.2
-pdfkit==1.0.0
+weasyprint==65.1

@@ -10,7 +10,8 @@ def get_sensor_record(sensor_id: str) -> Optional[dict]:
    return
 
 def list_sensor_records() -> List[dict]:
-    return
+    records = db.session.query(SensorRecord).order_by(SensorRecord.timestamp.desc()).all()
+    return [r.to_dict() for r in records]
 
 def update_sensor_record(sensor_id: str, data: dict) -> Optional[dict]:
     return

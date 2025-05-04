@@ -1,4 +1,4 @@
-# FarmTech Solutions - Python Irrigation Managment
+# FarmTech Solutions - Python Irrigation Management
 
 Este projeto simula a coleta de dados agrícolas utilizando sensores físicos conectados a um ESP32.  
 A aplicação em Python foi desenvolvida para armazenar, visualizar e analisar esses dados em um banco de dados Oracle, seguindo boas práticas de arquitetura, organização e clean code.
@@ -90,6 +90,7 @@ python src/python/database/setup.py
 ```
 
 As tabelas criadas serão:
+
 - `components`
 - `sensor_records`
 - `climate_data`
@@ -153,3 +154,40 @@ Cada registro de sensor (`SensorRecord`) agrega:
 - Presença de fósforo
 - Presença de potássio
 - Status da irrigação (ATIVADA/DESLIGADA)
+
+## Dashboard interativa com Streamlit - Ir além 1
+
+O projeto conta com uma interface web interativa desenvolvida com Streamlit, permitindo a visualização e manipulação dos dados diretamente do navegador, sem necessidade de acessar o terminal.
+
+### Recursos disponíveis:
+
+- Visualização gráfica dos dados agrícolas:
+
+  - Gráficos de linha, histograma e dispersão para temperatura, umidade, fósforo e potássio
+  - Análise do estado da irrigação e nutrientes no solo
+
+- Exportação de dados:
+
+  - Download em formato CSV
+  - Geração automática de PDF usando WeasyPrint
+
+- CRUD completo via interface:
+
+  - Inserção, edição e exclusão de registros climáticos, sensores e componentes
+  - Todos os dados são salvos e atualizados diretamente no banco Oracle
+
+- Atualizações em tempo real com st.rerun() após cada operação
+
+## Exemplos visuais:
+
+<p align="center"> <img src="../../assets/dashboard_tabela.png" width="600" alt="Exemplo de visualização da tabela" /> <br/> <br/> <img src="../../assets/dashboard_crud.png" width="600" alt="Formulário para criar e editar registros" /> </p>
+
+As imagens acima são exemplos da dashboard em funcionamento. Você pode gerar os seus próprios dados simulando sensores com o ESP32.
+
+## Como executar a dashboard:
+
+No terminal, com o ambiente virtual ativado, execute:
+
+```bash
+streamlit run src/python/app_dashboard.py
+```

@@ -12,15 +12,51 @@ from services.component_service import (
     update_component, delete_component
 )
 from services.sensor_service import (
-    create_sensor_record, list_sensor_records, get_sensor_record,
+    create_sensor_record, list_sensor_records,
     update_sensor_record, delete_sensor_record
 )
-import pdfkit
+
+from weasyprint import HTML
+
 
 st.set_page_config(page_title="Dashboard Irrigação", layout="wide")
 st.title("FarmTech Solutions - Dashboard de Irrigação Inteligente")
 
-aba = st.sidebar.radio("Selecione a tabela para gerenciar:", ["Dados Climáticos", "Registros de Sensores", "Componentes"])
+aba = st.sidebar.radio("Selecione a tabela para gerenciar:", ["Visão Geral", "Dados Climáticos", "Registros de Sensores", "Componentes"])
+
+# ---------------------- VISÃO GERAL --------------------------
+if aba == "Visão Geral":
+        sensor_df = pd.DataFrame(list_sensor_records())
+
+        if sensor_df.empty:
+            st.info("Nenhum dado de sensor disponível para mostrar a situação atual da safra.")
+        else:
+            sensor_df["timestamp"] = pd.to_datetime(sensor_df["timestamp"])
+            latest = sensor_df.sort_values("timestamp", ascending=False).iloc[0]
+
+            st.subheader("🌾 Estado Atual da Safra")
+
+            col1, col2, col3, col4, col5 = st.columns(5)
+
+            with col1:
+                st.metric("Umidade do Solo", f"{latest['soil_moisture']:.2f} %")
+
+            with col2:
+                ph_label = f"{latest['soil_ph']:.2f}"
+                st.metric("pH do Solo", ph_label)
+
+            with col3:
+                phos = "Presente" if latest["phosphorus_present"] else "Ausente"
+                st.metric("Fósforo (P)", phos)
+
+            with col4:
+                pot = "Presente" if latest["potassium_present"] else "Ausente"
+                st.metric("Potássio (K)", pot)
+
+            with col5:
+                status = latest["irrigation_status"]
+                emoji = "💧" if status == "ATIVADA" else "⛔"
+                st.metric("Irrigação", f"{emoji} {status}")
 
 # ---------------------- CLIMATE DATA -------------------------
 if aba == "Dados Climáticos":
@@ -79,7 +115,7 @@ if aba == "Dados Climáticos":
 
         try:
             html = df.to_html(index=False)
-            pdfkit.from_string(html, "climate_data.pdf")
+            HTML(string=html).write_pdf("climate_data.pdf")
             with open("climate_data.pdf", "rb") as f:
                 pdf_bytes = f.read()
             st.download_button(
@@ -88,8 +124,8 @@ if aba == "Dados Climáticos":
                 file_name='climate_data.pdf',
                 mime='application/pdf'
             )
-        except:
-            st.warning("pdfkit não está instalado ou configurado corretamente.")
+        except Exception as e:
+            st.error(f"Erro ao gerar PDF: {e}")
 
     with st.expander("Novo Registro Climático"):
         col1, col2, col3 = st.columns(3)
@@ -110,7 +146,7 @@ if aba == "Dados Climáticos":
             st.success(f"Registro criado com ID {record['id']}")
             st.rerun()
 
-    with st.expander("Editar/Remover Registro Climático"):
+    with st.expander("Editar ou remover registro climático"):
         ids = [r["id"] for r in list_climate_data()]
         selected_id = st.selectbox("Selecione o registro:", ids)
         if selected_id:
@@ -138,6 +174,32 @@ elif aba == "Registros de Sensores":
         df["timestamp"] = pd.to_datetime(df["timestamp"])
         st.dataframe(df, use_container_width=True)
 
+        with st.expander("Visualização de Nutrientes e Irrigação"):
+            fig_nutri, ax_nutri = plt.subplots()
+            df['phosphorus_present'] = df['phosphorus_present'].astype(bool)
+            df['potassium_present'] = df['potassium_present'].astype(bool)
+            nutrient_counts = pd.DataFrame({
+                "Fósforo": df['phosphorus_present'].value_counts(),
+                "Potássio": df['potassium_present'].value_counts()
+            })
+            nutrient_counts.plot(kind='bar', ax=ax_nutri, color=['purple', 'green'])
+            ax_nutri.set_title("Presença de Nutrientes (P e K)")
+            ax_nutri.set_xlabel("Presença")
+            ax_nutri.set_ylabel("Quantidade")
+            st.pyplot(fig_nutri)
+
+            fig_irrig, ax_irrig = plt.subplots()
+            df_sorted = df.sort_values(by="timestamp")
+            df_sorted['status_numeric'] = df_sorted['irrigation_status'].apply(lambda x: 1 if x == "ATIVADA" else 0)
+            ax_irrig.step(df_sorted["timestamp"], df_sorted['status_numeric'], where='post')
+            ax_irrig.set_yticks([0, 1])
+            ax_irrig.set_yticklabels(["DESLIGADA", "ATIVADA"])
+            ax_irrig.set_title("Status da Irrigação ao Longo do Tempo")
+            ax_irrig.set_xlabel("Data/Hora")
+            ax_irrig.set_ylabel("Status")
+            ax_irrig.grid(True)
+            st.pyplot(fig_irrig)
+
     with st.expander("Novo registro de sensor"):
         umidade = st.number_input("Umidade do solo", format="%.2f")
         phos = st.checkbox("Fósforo presente")
@@ -156,6 +218,47 @@ elif aba == "Registros de Sensores":
             st.success("Sensor cadastrado!")
             st.rerun()
 
+    with st.expander("Editar ou remover registro existente"):
+        df = pd.DataFrame(list_sensor_records())
+
+        if df.empty:
+            st.info("Nenhum registro disponível.")
+        else:
+            df["id_str"] = df["id"].astype(str)
+            selected_id = st.selectbox("Selecione o ID do registro", df["id_str"])
+            selected_row = df[df["id_str"] == selected_id].iloc[0]
+
+            new_umidade = st.number_input("Umidade do solo", value=selected_row["soil_moisture"], format="%.2f")
+            new_phos = st.checkbox("Fósforo presente", value=selected_row["phosphorus_present"])
+            new_pot = st.checkbox("Potássio presente", value=selected_row["potassium_present"])
+            new_ph = st.number_input("pH do solo", value=selected_row["soil_ph"], format="%.2f")
+            new_status = st.selectbox(
+                "Status da irrigação",
+                ["ATIVADA", "DESLIGADA"],
+                index=0 if selected_row["irrigation_status"] == "ATIVADA" else 1,
+                key=f"status_select_{selected_id}"
+            )
+
+            col1, col2 = st.columns(2)
+            with col1:
+                if st.button("Atualizar registro"):
+                    update_sensor_record(selected_row["id"], {
+                        "soil_moisture": new_umidade,
+                        "phosphorus_present": new_phos,
+                        "potassium_present": new_pot,
+                        "soil_ph": new_ph,
+                        "irrigation_status": new_status,
+                        "timestamp": datetime.now().isoformat()
+                    })
+                    st.success("Registro atualizado!")
+                    st.rerun()
+
+            with col2:
+                if st.button("❌ Remover este registro"):
+                    delete_sensor_record(selected_row["id"])
+                    st.warning("Registro removido com sucesso!")
+                    st.rerun()
+
 # ---------------------- COMPONENTS -------------------------
 elif aba == "Componentes":
     st.header("🔧 Componentes")
@@ -173,18 +276,37 @@ elif aba == "Componentes":
             st.success("Componente criado!")
             st.rerun()
 
-    with st.expander("Editar/Remover componente"):
-        ids = [r["id"] for r in list_components()]
-        selected_id = st.selectbox("Selecione o componente:", ids)
-        if selected_id:
-            comp = get_component(selected_id)
-            new_name = st.text_input("Novo nome", value=comp["name"])
-            new_type = st.selectbox("Novo tipo", ["Sensor", "Actuator"], index=0 if comp["type"] == "Sensor" else 1)
-            if st.button("Atualizar componente"):
-                update_component(selected_id, {"name": new_name, "type": new_type})
-                st.success("Atualizado!")
-                st.rerun()
-            if st.button("Deletar componente"):
-                delete_component(selected_id)
-                st.success("Removido!")
-                st.rerun()
+    with st.expander("Editar ou remover componente"):
+        componentes = list_components()
+        ids = [r["id"] for r in componentes if r is not None]
+
+        if not ids:
+            st.info("Nenhum componente disponível.")
+        else:
+            selected_id = st.selectbox("Selecione o componente:", ids)
+
+            if selected_id:
+                comp = get_component(selected_id)
+
+                if comp is None:
+                    st.error("Componente não encontrado.")
+                else:
+                    new_name = st.text_input("Novo nome", value=comp.get("name", ""))
+                    new_type = st.selectbox(
+                        "Novo tipo",
+                        ["Sensor", "Actuator"],
+                        index=0 if comp.get("type") == "Sensor" else 1
+                    )
+
+                    col1, col2 = st.columns(2)
+                    with col1:
+                        if st.button("Atualizar componente"):
+                            update_component(selected_id, {"name": new_name, "type": new_type})
+                            st.success("Atualizado!")
+                            st.rerun()
+
+                    with col2:
+                        if st.button("Deletar componente"):
+                            delete_component(selected_id)
+                            st.success("Removido!")
+                            st.rerun()

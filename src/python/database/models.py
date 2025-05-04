@@ -2,7 +2,8 @@ import uuid
 from sqlalchemy import Column, String, Float, Boolean, DateTime, ForeignKey
 from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.orm import relationship
-from datetime import datetime
+from datetime import datetime, timezone
+
 
 Base = declarative_base()
 
@@ -27,7 +28,7 @@ class SensorRecord(Base):
     __tablename__ = "sensor_records"
 
     id = Column(String(36), primary_key=True, default=lambda: str(uuid.uuid4()))
-    timestamp = Column(DateTime, nullable=False, default=datetime.utcnow)  # Momento da coleta
+    timestamp = Column(DateTime, nullable=False, default=lambda: datetime.now(timezone.utc))  # Momento da coleta
     soil_moisture = Column(Float, nullable=False)  # Umidade do solo (%)
     phosphorus_present = Column(Boolean, nullable=False)  # Presença de fósforo
     potassium_present = Column(Boolean, nullable=False)  # Presença de potássio
@@ -43,7 +44,6 @@ class SensorRecord(Base):
             "potassium_present": self.potassium_present,
             "soil_ph": self.soil_ph,
             "irrigation_status": self.irrigation_status,
-            "component_id": self.component_id,
         }
 
 
@@ -52,7 +52,7 @@ class ClimateData(Base):
     __tablename__ = "climate_data"
 
     id = Column(String(36), primary_key=True, default=lambda: str(uuid.uuid4()))
-    timestamp = Column(DateTime, nullable=False, default=datetime)  # Momento da coleta dos dados climáticos
+    timestamp = Column(DateTime, nullable=False, default=lambda: datetime.now(timezone.utc))  # Momento da coleta dos dados climáticos
     temperature = Column(Float, nullable=False)  # Temperatura ambiente (°C)
     air_humidity = Column(Float, nullable=False)  # Umidade do ar (%)
     rain_forecast = Column(Boolean, nullable=False)  # Previsão de chuva (True/False)
