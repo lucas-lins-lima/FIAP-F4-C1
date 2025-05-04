@@ -19,6 +19,9 @@ float humidity = 0.0;
 float ph = 0.0;
 bool phosphorus_present = false;
 bool potassium_present = false;
+bool rain_forecast = false;
+float air_humidity = 0.0;
+float temperature = 0.0;
 
 // Simulação de dados climáticos vindos do Python
 const char* climate_json = R"(
@@ -46,15 +49,27 @@ void setup() {
   delay(100);
   Serial.println("Sistema de irrigação inteligente inicializado");
 
-  StaticJsonDocument<256> doc;
+  // Simula dados climáticos vindos de script Python (como se fossem enviados via porta serial)
+  String climate_json = "{\"temperature\": 22.5, \"air_humidity\": 75.0, \"rain_forecast\": true}";
+
+  // Parseia os dados recebidos
+  StaticJsonDocument<200> doc;
   DeserializationError error = deserializeJson(doc, climate_json);
+
   if (error) {
-    Serial.print("Erro ao ler dados climáticos simulados: ");
+    Serial.println("Erro ao ler dados climáticos externos. Usando apenas sensores locais.");
     Serial.println(error.c_str());
   } else {
+    temperature = doc["temperature"];
+    air_humidity = doc["air_humidity"];
     rain_forecast = doc["rain_forecast"];
-    Serial.print("Chuva prevista (via JSON): ");
-    Serial.println(rain_forecast ? "SIM" : "NÃO");
+
+    Serial.print("Temperatura externa: ");
+    Serial.println(temperature);
+    Serial.print("Umidade do ar: ");
+    Serial.println(air_humidity);
+    Serial.print("Previsão de chuva: ");
+    Serial.println(rain_forecast ? "Sim" : "Não");
   }
 }
 
@@ -90,33 +105,32 @@ void loop() {
   if (rain_forecast) {
     Serial.println("Previsão de chuva detectada. Irrigação cancelada.");
     irrigate = false;
+  } else {
+      // 2. Irrigar se umidade < 40% e fósforo presente
+      if (humidity < 40 && phosphorus_present) {
+        irrigate = true;
+      }
+    
+      // 3. Não irrigar se potássio presente e umidade > 60%
+      if (potassium_present && humidity > 60) {
+        irrigate = false;
+      }
+    
+      // 4. Irrigar apenas se pH estiver entre 5.5 e 7.0 (faixa ótima)
+      if (humidity < 40 && (ph < 5.5 || ph > 7.0)) {
+        irrigate = false;
+      }
+    
+      // 5. Nunca irrigar se umidade > 70%
+      if (humidity > 70) {
+        irrigate = false;
+      }
+    
+      // 6. Irrigar se faltar fósforo ou potássio, mas com umidade entre 30% e 50%
+      if ((!phosphorus_present || !potassium_present) && (humidity >= 30 && humidity <= 50)) {
+        irrigate = true;
+      }
   }
-
-  // 2. Irrigar se umidade < 40% e fósforo presente
-  if (humidity < 40 && phosphorus_present) {
-    irrigate = true;
-  }
-
-  // 3. Não irrigar se potássio presente e umidade > 60%
-  if (potassium_present && humidity > 60) {
-    irrigate = false;
-  }
-
-  // 4. Irrigar apenas se pH estiver entre 5.5 e 7.0 (faixa ótima)
-  if (humidity < 40 && (ph < 5.5 || ph > 7.0)) {
-    irrigate = false;
-  }
-
-  // 5. Nunca irrigar se umidade > 70%
-  if (humidity > 70) {
-    irrigate = false;
-  }
-
-  // 6. Irrigar se faltar fósforo ou potássio, mas com umidade entre 30% e 50%
-  if ((!phosphorus_present || !potassium_present) && (humidity >= 30 && humidity <= 50)) {
-    irrigate = true;
-  }
-
 
   // Aciona ou desliga a bomba de acordo com a decisão final
   if (irrigate) {
@@ -129,6 +143,6 @@ void loop() {
     Serial.println("Irrigação: DESLIGADA");
   }
 
-  // Aguarda 2 segundos antes da próxima leitura
-  delay(2000);
+   // Aguarda 10 minutos antes da próxima leitura
+   delay(600000); // 10 minutos = 600.000 ms
 }
