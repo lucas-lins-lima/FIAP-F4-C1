@@ -1,31 +1,48 @@
+from datetime import datetime, timedelta
+import json
+from typing import Dict, Any
 
-from database.setup import create_all_tables, drop_all_tables
-from database.utils import print_mer
-from logs.logger import Logger
-from services.weather_service import run_weather_integration
+from config.database_config import DatabaseConfig
+from database.repositories.sensor_repository import SensorRepository
+from services.sensor_service import SensorService
+from database.models.sensor_data import SensorData
 
-logger = Logger(__name__)()
-
+def simulate_sensor_data() -> Dict[str, Any]:
+    """Simula dados de sensores para teste."""
+    return {
+        'timestamp': datetime.now(),
+        'phosphorus_level': True,
+        'potassium_level': True,
+        'ph_level': 6.5,
+        'soil_moisture': 45.0,
+        'irrigation_active': False
+    }
 
 def main():
-    logger.info("Iniciando o sistema...")
+    # Configuração do banco de dados
+    config = DatabaseConfig()
+    repository = SensorRepository(config)
+    service = SensorService(repository)
 
-    try:
-        logger.info("Criando tabelas no banco, se necessário...")
-        # create_all_tables()
+    # Simular e processar dados dos sensores
+    print("\n=== Simulando dados dos sensores ===")
+    sensor_data = SensorData.from_dict(simulate_sensor_data())
+    processed_data = service.process_sensor_data(sensor_data)
+    print(f"Dados processados: {json.dumps(processed_data.to_dict(), indent=2, default=str)}")
 
-        run_weather_integration()
+    # Obter estatísticas das últimas 24 horas
+    print("\n=== Estatísticas das últimas 24 horas ===")
+    stats = service.get_sensor_statistics(
+        datetime.now() - timedelta(hours=24),
+        datetime.now()
+    )
+    print(f"Estatísticas: {json.dumps(stats, indent=2)}")
 
-        # print_mer()
-
-        logger.info("Conexão com o banco de dados bem-sucedida.")
-        logger.info("Tabelas criadas/verificadas com sucesso.")
-
-    except Exception as e:
-        logger.exception("Erro ao iniciar o sistema ou conectar ao banco de dados.")
-        raise e
-
-    logger.info("Sistema finalizado.")
+    # Listar todos os registros
+    print("\n=== Todos os registros ===")
+    all_data = service.get_all_sensor_data()
+    for data in all_data:
+        print(f"Registro: {json.dumps(data.to_dict(), indent=2, default=str)}")
 
 if __name__ == "__main__":
     main()
