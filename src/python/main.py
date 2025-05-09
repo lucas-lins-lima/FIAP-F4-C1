@@ -19,26 +19,18 @@ def simulate_sensor_data() -> Dict[str, Any]:
     }
 
 def main():
-    # Configuração do banco de dados
+
     config = DatabaseConfig()
     repository = SensorRepository(config)
     service = SensorService(repository)
 
-    # Simular e processar dados dos sensores
+
     print("\n=== Simulando dados dos sensores ===")
     sensor_data = SensorData.from_dict(simulate_sensor_data())
     processed_data = service.process_sensor_data(sensor_data)
     print(f"Dados processados: {json.dumps(processed_data.to_dict(), indent=2, default=str)}")
 
-    # Obter estatísticas das últimas 24 horas
-    print("\n=== Estatísticas das últimas 24 horas ===")
-    stats = service.get_sensor_statistics(
-        datetime.now() - timedelta(hours=24),
-        datetime.now()
-    )
-    print(f"Estatísticas: {json.dumps(stats, indent=2)}")
 
-    # Listar todos os registros
     print("\n=== Todos os registros ===")
     all_data = service.get_all_sensor_data()
     for data in all_data:

@@ -4,7 +4,6 @@ from datetime import datetime
 from ..database.models.sensor_data import SensorData
 
 def test_sensor_data_creation():
-    """Testa a criação de um objeto SensorData."""
     timestamp = datetime.now()
     sensor_data = SensorData(
         id=1,
@@ -25,7 +24,6 @@ def test_sensor_data_creation():
     assert sensor_data.irrigation_active is True
 
 def test_sensor_data_to_dict():
-    """Testa a conversão de SensorData para dicionário."""
     timestamp = datetime.now()
     sensor_data = SensorData(
         id=1,
@@ -47,7 +45,6 @@ def test_sensor_data_to_dict():
     assert data_dict['irrigation_active'] is True
 
 def test_sensor_data_from_dict():
-    """Testa a criação de SensorData a partir de um dicionário."""
     timestamp = datetime.now()
     data_dict = {
         'id': 1,
@@ -69,7 +66,6 @@ def test_sensor_data_from_dict():
     assert sensor_data.irrigation_active is True
 
 def test_sensor_data_default_values():
-    """Testa os valores padrão de SensorData."""
     sensor_data = SensorData()
     assert sensor_data.id is None
     assert isinstance(sensor_data.timestamp, datetime)

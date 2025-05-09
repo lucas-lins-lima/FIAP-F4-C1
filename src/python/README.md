@@ -1,175 +1,169 @@
-# Entrega 2: Armazenamento de Dados em Banco SQL com Python
+# Sistema de Irrigação Inteligente - FarmTech Solutions
 
-Este projeto implementa a camada de armazenamento e análise de dados do sistema de irrigação inteligente, focando na captura de dados do ESP32 e seu armazenamento em banco de dados SQL.
+Este é um sistema de irrigação inteligente que utiliza sensores para monitorar e controlar a irrigação de culturas agrícolas.
 
-## Metas da Entrega
+## Estrutura do Projeto
 
-1. **Captura de Dados**
-   - Implementar a leitura dos dados do monitor serial do ESP32
-   - Processar e validar os dados recebidos
-   - Simular a comunicação serial em ambiente de desenvolvimento
-
-2. **Armazenamento em Banco SQL**
-   - Criar script Python para simulação do armazenamento
-   - Implementar estrutura de banco de dados relacional
-   - Garantir integridade e consistência dos dados
-
-3. **Operações CRUD**
-   - Implementar operações de inserção (Create)
-   - Implementar operações de consulta (Read)
-   - Implementar operações de atualização (Update)
-   - Implementar operações de remoção (Delete)
-
-4. **Documentação e Justificativa**
-   - Relacionar a estrutura de dados com o MER da Fase 2
-   - Justificar as escolhas de implementação
-   - Documentar as operações CRUD implementadas
-
-## Entregáveis
-
-### 1. Script Python Funcional
-
-O script principal (`main.py`) implementa:
-- Leitura de dados do ESP32
-- Processamento e validação
-- Armazenamento em banco SQL
-- Operações CRUD básicas
-
-### 2. Tabelas de Exemplo
-
-#### sensor_records
-```sql
-CREATE TABLE sensor_records (
-    id SERIAL PRIMARY KEY,
-    timestamp TIMESTAMP NOT NULL,
-    soil_moisture FLOAT NOT NULL,
-    ph_level FLOAT NOT NULL,
-    phosphorus_level BOOLEAN NOT NULL,
-    potassium_level BOOLEAN NOT NULL,
-    irrigation_active BOOLEAN NOT NULL
-);
+```
+src/python/
+├── database/
+│   ├── __init__.py
+│   ├── models.py
+│   ├── oracle.py
+│   ├── setup.py
+│   └── repositories/
+│       ├── __init__.py
+│       ├── produtor_repository.py
+│       ├── cultura_repository.py
+│       ├── sensor_repository.py
+│       ├── leitura_sensor_repository.py
+│       └── aplicacao_repository.py
+├── examples/
+│   └── repository_example.py
+├── tests/
+│   └── test_repositories.py
+├── requirements.txt
+├── pytest.ini
+└── README.md
 ```
 
-#### climate_data
-```sql
-CREATE TABLE climate_data (
-    id SERIAL PRIMARY KEY,
-    timestamp TIMESTAMP NOT NULL,
-    temperature FLOAT NOT NULL,
-    air_humidity FLOAT NOT NULL,
-    precipitation FLOAT NOT NULL
-);
-```
+## Requisitos
 
-### 3. Relação com MER da Fase 2
+- Python 3.8+
+- Oracle Database (XE Edition)
+- Docker e Docker Compose (opcional)
 
-A estrutura do banco de dados foi projetada seguindo o MER desenvolvido na Fase 2, com as seguintes considerações:
+## Configuração
 
-- **Entidades Principais**:
-  - Sensor Records: Armazena leituras dos sensores
-  - Climate Data: Armazena dados meteorológicos
-
-- **Relacionamentos**:
-  - One-to-Many entre Climate Data e Sensor Records
-  - Timestamps para rastreamento temporal
-
-- **Adaptações Práticas**:
-  - Adição de índices para otimização
-  - Campos de auditoria (created_at, updated_at)
-  - Validações de integridade
-
-## Como Executar
-
-1. **Configuração do Ambiente**
+1. Clone o repositório
+2. Instale as dependências:
    ```bash
-   cd src/python
    pip install -r requirements.txt
    ```
-
-2. **Configuração do Banco**
-   - Crie um arquivo `.env` na pasta `src/python` com as seguintes variáveis:
+3. Configure as variáveis de ambiente:
    ```bash
-   ORACLE_USER=seu_usuario
-   ORACLE_PASSWORD=sua_senha
+   ORACLE_USER=system
+   ORACLE_PASSWORD=oracle
    ORACLE_HOST=localhost
    ORACLE_PORT=1521
    ORACLE_SERVICE=XE
    ```
-   - Execute o script de inicialização do banco:
+
+## Executando com Docker
+
+1. Construa e inicie os containers:
    ```bash
-   cd src/python
-   python database/setup.py
+   docker-compose up -d
    ```
-   Este script irá:
-   - Criar todas as tabelas necessárias
-   - Inicializar o banco com dados de exemplo
-   - Configurar as conexões necessárias
 
-## Operações CRUD Implementadas
+2. Para executar os testes:
+   ```bash
+   docker-compose run test
+   ```
 
-### Create (Inserção)
-```python
-# Exemplo de inserção de registro de sensor
-def insert_sensor_record(soil_moisture, ph_level, phosphorus, potassium, irrigation):
-    record = SensorRecord(
-        soil_moisture=soil_moisture,
-        ph_level=ph_level,
-        phosphorus_level=phosphorus,
-        potassium_level=potassium,
-        irrigation_active=irrigation
-    )
-    db.session.add(record)
-    db.session.commit()
+## Executando Localmente
+
+1. Inicialize o banco de dados:
+   ```bash
+   python -m database.setup
+   ```
+
+2. Execute os testes:
+   ```bash
+   pytest
+   ```
+
+## Modelo de Dados
+
+### Tabelas
+
+#### Produtor
+```sql
+CREATE TABLE produtor (
+    id NUMBER GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
+    nome VARCHAR2(100) NOT NULL,
+    email VARCHAR2(100) UNIQUE NOT NULL,
+    telefone VARCHAR2(20)
+);
 ```
 
-### Read (Consulta)
-```python
-# Exemplo de consulta de registros
-def get_sensor_records(start_date, end_date):
-    return SensorRecord.query.filter(
-        SensorRecord.timestamp.between(start_date, end_date)
-    ).all()
+#### Cultura
+```sql
+CREATE TABLE cultura (
+    id NUMBER GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
+    nome VARCHAR2(100) NOT NULL,
+    tipo VARCHAR2(50) NOT NULL,
+    data_inicio DATE NOT NULL,
+    data_fim DATE,
+    id_produtor NUMBER NOT NULL,
+    FOREIGN KEY (id_produtor) REFERENCES produtor(id)
+);
 ```
 
-### Update (Atualização)
-```python
-# Exemplo de atualização de registro
-def update_sensor_record(record_id, new_values):
-    record = SensorRecord.query.get(record_id)
-    for key, value in new_values.items():
-        setattr(record, key, value)
-    db.session.commit()
+#### Sensor
+```sql
+CREATE TABLE sensor (
+    id NUMBER GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
+    tipo VARCHAR2(50) NOT NULL,
+    modelo VARCHAR2(50) NOT NULL,
+    localizacao VARCHAR2(100) NOT NULL,
+    id_cultura NUMBER NOT NULL,
+    FOREIGN KEY (id_cultura) REFERENCES cultura(id)
+);
 ```
 
-### Delete (Remoção)
-```python
-# Exemplo de remoção de registro
-def delete_sensor_record(record_id):
-    record = SensorRecord.query.get(record_id)
-    db.session.delete(record)
-    db.session.commit()
+#### Leitura Sensor
+```sql
+CREATE TABLE leitura_sensor (
+    id NUMBER GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
+    id_sensor NUMBER NOT NULL,
+    data_hora TIMESTAMP DEFAULT SYSTIMESTAMP NOT NULL,
+    valor_umidade NUMBER(5,2),
+    valor_ph NUMBER(4,2),
+    valor_npk_fosforo NUMBER(5,2),
+    valor_npk_potassio NUMBER(5,2),
+    FOREIGN KEY (id_sensor) REFERENCES sensor(id)
+);
 ```
 
-## Justificativa das Escolhas
+#### Aplicação
+```sql
+CREATE TABLE aplicacao (
+    id NUMBER GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
+    id_cultura NUMBER NOT NULL,
+    tipo VARCHAR2(50) NOT NULL,
+    quantidade NUMBER(10,2) NOT NULL,
+    data_hora TIMESTAMP DEFAULT SYSTIMESTAMP NOT NULL,
+    FOREIGN KEY (id_cultura) REFERENCES cultura(id)
+);
+```
 
-1. **SQLAlchemy como ORM**
-   - Facilita o mapeamento objeto-relacional
-   - Fornece abstração do banco de dados
-   - Suporta múltiplos bancos de dados
+## Testes
 
-2. **Estrutura de Tabelas**
-   - Normalização para evitar redundância
-   - Índices para otimização de consultas
-   - Timestamps para rastreamento
+O projeto utiliza pytest para testes unitários e de integração. Os testes estão localizados no diretório `tests/` e podem ser executados de duas formas:
 
-3. **Validações**
-   - Verificação de tipos de dados
-   - Restrições de integridade
-   - Tratamento de erros
+1. Usando Docker:
+   ```bash
+   docker-compose run test
+   ```
 
-## Observações
+2. Localmente:
+   ```bash
+   pytest
+   ```
 
-- O sistema foi projetado para ser facilmente extensível
-- As operações CRUD são documentadas e testadas
-- O código segue as melhores práticas de Python
-- A estrutura do banco permite futuras expansões 
+Os testes incluem:
+- Testes de repositório para todas as entidades
+- Fixtures para configuração do ambiente de teste
+- Cobertura de código com pytest-cov
+
+## Exemplos
+
+O diretório `examples/` contém exemplos de uso dos repositórios:
+
+- `repository_example.py`: Demonstra o uso básico dos repositórios para criar, buscar, atualizar e deletar registros.
+
+Para executar o exemplo:
+```bash
+python examples/repository_example.py
+```

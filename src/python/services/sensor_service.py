@@ -5,13 +5,11 @@ from ..database.models.sensor_data import SensorData
 from ..database.repositories.sensor_repository import SensorRepository
 
 class SensorService:
-    """Serviço para gerenciar a lógica de negócios dos sensores."""
 
     def __init__(self, repository: SensorRepository):
         self.repository = repository
 
     def process_sensor_data(self, sensor_data: SensorData) -> SensorData:
-        """Processa os dados dos sensores e determina se a irrigação deve ser ativada."""
         # Lógica para determinar se a irrigação deve ser ativada
         should_irrigate = (
             sensor_data.soil_moisture < 30.0 or  # Umidade muito baixa
@@ -24,33 +22,22 @@ class SensorService:
         return self.repository.create(sensor_data)
 
     def get_sensor_data(self, id: int) -> Optional[SensorData]:
-        """Obtém dados de um sensor específico."""
         return self.repository.get_by_id(id)
 
     def get_all_sensor_data(self) -> List[SensorData]:
-        """Obtém todos os dados dos sensores."""
         return self.repository.get_all()
 
     def update_sensor_data(self, sensor_data: SensorData) -> Optional[SensorData]:
-        """Atualiza os dados de um sensor."""
         return self.repository.update(sensor_data)
 
     def delete_sensor_data(self, id: int) -> bool:
-        """Remove os dados de um sensor."""
         return self.repository.delete(id)
 
     def get_sensor_data_by_date_range(self, start_date: datetime, end_date: datetime) -> List[SensorData]:
-        """Obtém dados dos sensores dentro de um intervalo de datas."""
         return self.repository.get_by_date_range(start_date, end_date)
 
-    def get_last_24_hours_data(self) -> List[SensorData]:
-        """Obtém dados dos sensores das últimas 24 horas."""
-        end_date = datetime.now()
-        start_date = end_date - timedelta(hours=24)
-        return self.get_sensor_data_by_date_range(start_date, end_date)
 
     def get_sensor_statistics(self, start_date: datetime, end_date: datetime) -> dict:
-        """Calcula estatísticas dos dados dos sensores em um período."""
         data = self.get_sensor_data_by_date_range(start_date, end_date)
         
         if not data:

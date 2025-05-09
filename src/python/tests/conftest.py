@@ -2,20 +2,20 @@ import pytest
 from datetime import datetime
 from typing import Generator
 
-from ..config.database_config import DatabaseConfig
-from ..database.repositories.sensor_repository import SensorRepository
-from ..services.sensor_service import SensorService
-from ..database.models.sensor_data import SensorData
+from config.database_config import DatabaseConfig
+from database.repositories.sensor_repository import SensorRepository
+from services.sensor_service import SensorService
+from database.models.sensor_data import SensorData
 
 @pytest.fixture
 def db_config() -> DatabaseConfig:
     """Fixture para configuração do banco de dados de teste."""
     return DatabaseConfig(
         host="localhost",
-        port=5432,
-        database="farmtech_test_db",
-        user="postgres",
-        password="postgres"
+        port=1521,
+        database="XE",
+        user="system",
+        password="oracle"
     )
 
 @pytest.fixture

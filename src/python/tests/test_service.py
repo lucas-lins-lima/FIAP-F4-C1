@@ -4,7 +4,6 @@ from datetime import datetime, timedelta
 from ..database.models.sensor_data import SensorData
 
 def test_process_sensor_data_irrigation_activation(sensor_service):
-    """Testa o processamento de dados que deve ativar a irrigação."""
     # Caso 1: Umidade muito baixa
     data1 = SensorData(soil_moisture=20.0)
     processed1 = sensor_service.process_sensor_data(data1)
@@ -26,7 +25,6 @@ def test_process_sensor_data_irrigation_activation(sensor_service):
     assert processed4.irrigation_active is True
 
 def test_process_sensor_data_no_irrigation(sensor_service):
-    """Testa o processamento de dados que não deve ativar a irrigação."""
     data = SensorData(
         phosphorus_level=True,
         potassium_level=True,
@@ -37,7 +35,6 @@ def test_process_sensor_data_no_irrigation(sensor_service):
     assert processed.irrigation_active is False
 
 def test_get_sensor_statistics(sensor_service):
-    """Testa o cálculo de estatísticas dos sensores."""
     # Criar dados de teste
     now = datetime.now()
     test_data = [
@@ -76,25 +73,7 @@ def test_get_sensor_statistics(sensor_service):
     assert stats['phosphorus_deficiency_percentage'] == 50.0  # 5 de 10 registros
     assert 30.0 <= stats['potassium_deficiency_percentage'] <= 40.0  # 3-4 de 10 registros
 
-def test_get_last_24_hours_data(sensor_service):
-    """Testa a busca de dados das últimas 24 horas."""
-    # Criar dados antigos e recentes
-    now = datetime.now()
-    old_data = SensorData(timestamp=now - timedelta(days=2))
-    recent_data = SensorData(timestamp=now - timedelta(hours=12))
-    
-    sensor_service.process_sensor_data(old_data)
-    sensor_service.process_sensor_data(recent_data)
-    
-    # Buscar dados das últimas 24 horas
-    last_24h_data = sensor_service.get_last_24_hours_data()
-    
-    # Verificar que apenas os dados recentes foram retornados
-    assert len(last_24h_data) == 1
-    assert last_24h_data[0].timestamp == recent_data.timestamp
-
 def test_crud_operations(sensor_service):
-    """Testa as operações CRUD básicas."""
     # Create
     data = SensorData(
         phosphorus_level=True,
