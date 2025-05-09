@@ -2,6 +2,97 @@
 
 Este projeto implementa a camada de armazenamento e análise de dados do sistema de irrigação inteligente, focando na captura de dados do ESP32 e seu armazenamento em banco de dados SQL.
 
+## Estrutura do Projeto
+
+```
+src/python/
+├── config/                    # Configurações do projeto
+│   ├── __init__.py
+│   └── settings.py           # Configurações gerais e constantes
+│
+├── database/                 # Camada de acesso a dados
+│   ├── __init__.py
+│   ├── models.py            # Definição dos modelos SQLAlchemy
+│   ├── oracle.py            # Configuração da conexão Oracle
+│   ├── setup.py             # Script de inicialização do banco
+│   └── repositories/        # Implementação dos repositórios
+│       ├── __init__.py
+│       ├── produtor_repository.py
+│       ├── cultura_repository.py
+│       ├── sensor_repository.py
+│       ├── leitura_sensor_repository.py
+│       └── aplicacao_repository.py
+│
+├── examples/                 # Exemplos de uso
+│   ├── __init__.py
+│   └── repository_example.py # Exemplo de uso dos repositórios
+│
+├── logs/                    # Logs do sistema
+│
+├── services/               # Camada de serviços
+│   ├── __init__.py
+│   ├── sensor_service.py   # Serviço de processamento de sensores
+│   ├── irrigation_service.py # Serviço de controle de irrigação
+│   ├── produtor_service.py # Serviço de gerenciamento de produtores
+│   ├── cultura_service.py  # Serviço de gerenciamento de culturas
+│   └── aplicacao_service.py # Serviço de gerenciamento de aplicações
+│
+├── tests/                  # Testes automatizados
+│   ├── __init__.py
+│   ├── conftest.py        # Configurações dos testes
+│   ├── test_models.py     # Testes dos modelos
+│   ├── test_repositories.py # Testes dos repositórios
+│   └── test_services.py   # Testes dos serviços
+│
+├── .env                    # Variáveis de ambiente
+├── .gitignore             # Arquivos ignorados pelo git
+├── Dockerfile             # Configuração do container
+├── main.py               # Ponto de entrada da aplicação
+├── pytest.ini            # Configuração do pytest
+├── README.md             # Documentação do projeto
+└── requirements.txt      # Dependências do projeto
+```
+
+### Descrição dos Diretórios
+
+#### config/
+Contém as configurações do projeto, incluindo:
+- Configurações do banco de dados
+- Constantes do sistema
+- Configurações de logging
+- Variáveis de ambiente
+
+#### database/
+Implementa a camada de acesso a dados:
+- `models.py`: Define as classes que mapeiam as tabelas do banco
+- `oracle.py`: Gerencia a conexão com o banco Oracle
+- `setup.py`: Script para inicialização do banco
+- `repositories/`: Implementa o padrão Repository para cada entidade
+
+#### examples/
+Contém exemplos de uso do sistema:
+- Exemplos de uso dos repositórios
+- Exemplos de consultas complexas
+- Exemplos de integração com serviços
+
+#### logs/
+Armazena os logs do sistema:
+- Logs da aplicação em produção
+- Logs dos testes
+- Logs de erro e debug
+
+#### services/
+Implementa a lógica de negócio:
+- Processamento de dados dos sensores
+- Lógica de controle de irrigação
+- Regras de negócio do sistema
+
+#### tests/
+Contém os testes automatizados:
+- Testes unitários
+- Testes de integração
+- Fixtures e configurações de teste
+
 ## Metas da Entrega
 
 1. **Captura de Dados**
@@ -256,8 +347,8 @@ tests/
 ├── __init__.py         # Marca o diretório como pacote Python
 ├── conftest.py         # Configurações dos testes
 ├── test_models.py      # Testes dos modelos
-├── test_repository.py  # Testes do repositório
-└── test_service.py     # Testes dos serviços
+├── test_repositories.py # Testes dos repositórios
+└── test_services.py    # Testes dos serviços
 ```
 
 ### Observações sobre os Testes
@@ -274,14 +365,13 @@ tests/
 ```python
 # Exemplo de inserção de registro de sensor
 def insert_sensor_record(soil_moisture, ph_level, phosphorus, potassium, irrigation):
-    record = SensorRecord(
+    record = SensorRecord.query.add(
         soil_moisture=soil_moisture,
         ph_level=ph_level,
         phosphorus_level=phosphorus,
         potassium_level=potassium,
         irrigation_active=irrigation
     )
-    db.session.add(record)
     db.session.commit()
 ```
 
