@@ -1,46 +1,152 @@
-# Sistema de Irrigação Inteligente - FarmTech Solutions
+# Entrega 2: Armazenamento de Dados em Banco SQL com Python
 
-Este é um sistema de irrigação inteligente que utiliza sensores para monitorar e controlar a irrigação de culturas agrícolas.
+Este projeto implementa a camada de armazenamento e análise de dados do sistema de irrigação inteligente, focando na captura de dados do ESP32 e seu armazenamento em banco de dados SQL.
 
-## Estrutura do Projeto
+## Metas da Entrega
 
+1. **Captura de Dados**
+   - Implementar a leitura dos dados do monitor serial do ESP32
+   - Processar e validar os dados recebidos
+   - Simular a comunicação serial em ambiente de desenvolvimento
+
+2. **Armazenamento em Banco SQL**
+   - Criar script Python para simulação do armazenamento
+   - Implementar estrutura de banco de dados relacional
+   - Garantir integridade e consistência dos dados
+
+3. **Operações CRUD**
+   - Implementar operações de inserção (Create)
+   - Implementar operações de consulta (Read)
+   - Implementar operações de atualização (Update)
+   - Implementar operações de remoção (Delete)
+
+4. **Documentação e Justificativa**
+   - Relacionar a estrutura de dados com o MER da Fase 2
+   - Justificar as escolhas de implementação
+   - Documentar as operações CRUD implementadas
+
+## Entregáveis
+
+### 1. Script Python Funcional
+
+O script principal (`main.py`) implementa:
+- Leitura de dados do ESP32
+- Processamento e validação
+- Armazenamento em banco SQL
+- Operações CRUD básicas
+
+### 2. Tabelas de Exemplo
+
+#### produtor
+```sql
+CREATE TABLE produtor (
+    id_produtor NUMBER GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
+    nome VARCHAR2(200) NOT NULL,
+    email VARCHAR2(200) NOT NULL,
+    telefone VARCHAR2(30) NOT NULL
+);
 ```
-src/python/
-├── database/
-│   ├── __init__.py
-│   ├── models.py
-│   ├── oracle.py
-│   ├── setup.py
-│   └── repositories/
-│       ├── __init__.py
-│       ├── produtor_repository.py
-│       ├── cultura_repository.py
-│       ├── sensor_repository.py
-│       ├── leitura_sensor_repository.py
-│       └── aplicacao_repository.py
-├── examples/
-│   └── repository_example.py
-├── tests/
-│   └── test_repositories.py
-├── requirements.txt
-├── pytest.ini
-└── README.md
+
+#### cultura
+```sql
+CREATE TABLE cultura (
+    id_cultura NUMBER GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
+    nome VARCHAR2(100) NOT NULL,
+    tipo VARCHAR2(50) NOT NULL,
+    data_inicio DATE NOT NULL,
+    data_fim DATE,
+    id_produtor NUMBER NOT NULL,
+    CONSTRAINT fk_cultura_produtor FOREIGN KEY (id_produtor) 
+        REFERENCES produtor(id_produtor)
+);
 ```
 
-## Requisitos
+#### sensor
+```sql
+CREATE TABLE sensor (
+    id_sensor NUMBER GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
+    tipo VARCHAR2(50) NOT NULL,
+    modelo VARCHAR2(50) NOT NULL,
+    localizacao VARCHAR2(100) NOT NULL,
+    id_cultura NUMBER NOT NULL,
+    CONSTRAINT fk_sensor_cultura FOREIGN KEY (id_cultura) 
+        REFERENCES cultura(id_cultura)
+);
+```
 
-- Python 3.8+
-- Oracle Database (XE Edition)
-- Docker e Docker Compose (opcional)
+#### leitura_sensor
+```sql
+CREATE TABLE leitura_sensor (
+    id_leitura NUMBER GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
+    id_sensor NUMBER NOT NULL,
+    data_hora TIMESTAMP NOT NULL,
+    valor_umidade NUMBER,
+    valor_ph NUMBER,
+    valor_npk_fosforo NUMBER,
+    valor_npk_potassio NUMBER,
+    CONSTRAINT fk_leitura_sensor FOREIGN KEY (id_sensor) 
+        REFERENCES sensor(id_sensor)
+);
+```
 
-## Configuração
+#### aplicacao
+```sql
+CREATE TABLE aplicacao (
+    id_aplicacao NUMBER GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
+    id_cultura NUMBER NOT NULL,
+    data_hora TIMESTAMP NOT NULL,
+    tipo VARCHAR2(50) NOT NULL,
+    quantidade NUMBER NOT NULL,
+    CONSTRAINT fk_aplicacao_cultura FOREIGN KEY (id_cultura) 
+        REFERENCES cultura(id_cultura)
+);
+```
 
-1. Clone o repositório
-2. Instale as dependências:
+### 3. Relação com MER da Fase 2
+
+A estrutura do banco de dados foi projetada seguindo o MER desenvolvido na Fase 2, com as seguintes considerações:
+
+- **Entidades Principais**:
+  - Produtor: Responsável pela plantação
+  - Cultura: Plantação gerenciada
+  - Sensor: Equipamento de coleta de dados
+  - Leitura_Sensor: Dados coletados
+  - Aplicacao: Ações realizadas na lavoura
+
+- **Relacionamentos**:
+  - 1 Produtor → N Culturas
+  - 1 Cultura → N Sensores
+  - 1 Sensor → N Leituras
+  - 1 Cultura → N Aplicações
+
+- **Adaptações Práticas**:
+  - Uso de NUMBER em vez de INT/DOUBLE para compatibilidade Oracle
+  - Adição de constraints para garantir integridade referencial
+  - Timestamps para rastreamento temporal
+  - Campos opcionais em leitura_sensor para diferentes tipos de sensores
+
+## Como Executar
+
+1. **Configuração do Ambiente**
    ```bash
+   cd src/python
    pip install -r requirements.txt
    ```
-3. Configure as variáveis de ambiente:
+
+2. **Configuração do Banco**
+
+   Você pode escolher entre usar um banco Oracle local ou usar a versão dockerizada:
+
+   ### Opção 1: Usando Docker (Recomendado)
+   
+   ```bash
+   # Na raiz do projeto
+   docker-compose up -d
+   ```
+   
+   Aguarde alguns minutos até o banco estar pronto (você pode verificar o status com `docker-compose ps`).
+   
+   Configure o arquivo `.env` na pasta `src/python` com as seguintes variáveis:
    ```bash
    ORACLE_USER=system
    ORACLE_PASSWORD=oracle
@@ -49,123 +155,162 @@ src/python/
    ORACLE_SERVICE=XE
    ```
 
-## Executando com Docker
-
-1. Construa e inicie os containers:
+   ### Opção 2: Usando Oracle Local
+   
+   Se você preferir usar uma instalação local do Oracle, configure o arquivo `.env` com suas credenciais:
    ```bash
-   docker-compose up -d
+   ORACLE_USER=seu_usuario
+   ORACLE_PASSWORD=sua_senha
+   ORACLE_HOST=localhost
+   ORACLE_PORT=1521
+   ORACLE_SERVICE=XE
    ```
 
-2. Para executar os testes:
+   ### Inicialização do Banco
+   
+   Após configurar o banco (seja via Docker ou local), execute:
    ```bash
-   docker-compose run test
+   cd src/python
+   # Adiciona o diretório atual ao PYTHONPATH
+   export PYTHONPATH=$PYTHONPATH:$(pwd)
+   python database/setup.py
+   ```
+   
+   Este script irá:
+   - Criar todas as tabelas necessárias
+   - Inicializar o banco com dados de exemplo
+   - Configurar as conexões necessárias
+
+   Uma mensagem como essa deve aparecer:
+
+   ![Banco populado com sucesso](../../assets/banco-populado-com-sucesso.png)
+   
+
+   ### Comandos Docker Úteis
+   
+   ```bash
+   # Verificar status do container
+   docker-compose ps
+   
+   # Ver logs do banco
+   docker-compose logs -f oracle
+   
+   # Parar o banco
+   docker-compose down
+   
+   # Parar e remover os volumes (apaga todos os dados)
+   docker-compose down -v
    ```
 
-## Executando Localmente
+## Executando os Testes
 
-1. Inicialize o banco de dados:
-   ```bash
-   python -m database.setup
-   ```
+O projeto inclui testes automatizados para garantir a qualidade do código. Para executar os testes:
 
-2. Execute os testes:
-   ```bash
-   pytest
-   ```
+### Opção 1: Usando Docker (Recomendado)
 
-## Modelo de Dados
-
-### Tabelas
-
-#### Produtor
-```sql
-CREATE TABLE produtor (
-    id NUMBER GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
-    nome VARCHAR2(100) NOT NULL,
-    email VARCHAR2(100) UNIQUE NOT NULL,
-    telefone VARCHAR2(20)
-);
-```
-
-#### Cultura
-```sql
-CREATE TABLE cultura (
-    id NUMBER GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
-    nome VARCHAR2(100) NOT NULL,
-    tipo VARCHAR2(50) NOT NULL,
-    data_inicio DATE NOT NULL,
-    data_fim DATE,
-    id_produtor NUMBER NOT NULL,
-    FOREIGN KEY (id_produtor) REFERENCES produtor(id)
-);
-```
-
-#### Sensor
-```sql
-CREATE TABLE sensor (
-    id NUMBER GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
-    tipo VARCHAR2(50) NOT NULL,
-    modelo VARCHAR2(50) NOT NULL,
-    localizacao VARCHAR2(100) NOT NULL,
-    id_cultura NUMBER NOT NULL,
-    FOREIGN KEY (id_cultura) REFERENCES cultura(id)
-);
-```
-
-#### Leitura Sensor
-```sql
-CREATE TABLE leitura_sensor (
-    id NUMBER GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
-    id_sensor NUMBER NOT NULL,
-    data_hora TIMESTAMP DEFAULT SYSTIMESTAMP NOT NULL,
-    valor_umidade NUMBER(5,2),
-    valor_ph NUMBER(4,2),
-    valor_npk_fosforo NUMBER(5,2),
-    valor_npk_potassio NUMBER(5,2),
-    FOREIGN KEY (id_sensor) REFERENCES sensor(id)
-);
-```
-
-#### Aplicação
-```sql
-CREATE TABLE aplicacao (
-    id NUMBER GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
-    id_cultura NUMBER NOT NULL,
-    tipo VARCHAR2(50) NOT NULL,
-    quantidade NUMBER(10,2) NOT NULL,
-    data_hora TIMESTAMP DEFAULT SYSTIMESTAMP NOT NULL,
-    FOREIGN KEY (id_cultura) REFERENCES cultura(id)
-);
-```
-
-## Testes
-
-O projeto utiliza pytest para testes unitários e de integração. Os testes estão localizados no diretório `tests/` e podem ser executados de duas formas:
-
-1. Usando Docker:
-   ```bash
-   docker-compose run test
-   ```
-
-2. Localmente:
-   ```bash
-   pytest
-   ```
-
-Os testes incluem:
-- Testes de repositório para todas as entidades
-- Fixtures para configuração do ambiente de teste
-- Cobertura de código com pytest-cov
-
-## Exemplos
-
-O diretório `examples/` contém exemplos de uso dos repositórios:
-
-- `repository_example.py`: Demonstra o uso básico dos repositórios para criar, buscar, atualizar e deletar registros.
-
-Para executar o exemplo:
 ```bash
-python examples/repository_example.py
+# Na raiz do projeto
+docker-compose up --build tests
+```
+
+### Opção 2: Executando Localmente
+
+1. **Configurar o ambiente de testes**:
+   ```bash
+   cd src/python
+   # Adiciona o diretório atual ao PYTHONPATH
+   export PYTHONPATH=$PYTHONPATH:$(pwd)
+   ```
+
+2. **Executar todos os testes**:
+   ```bash
+   python -m pytest
+   ```
+
+3. **Executar testes específicos**:
+   ```bash
+   # Testes do banco de dados
+   python -m pytest tests/database/
+   
+   # Testes dos serviços
+   python -m pytest tests/services/
+   
+   # Teste específico
+   python -m pytest tests/database/test_models.py
+   ```
+
+4. **Executar testes com cobertura**:
+   ```bash
+   python -m pytest --cov=.
+   ```
+
+5. **Verificar logs dos testes**:
+   ```bash
+   python -m pytest -v
+   ```
+
+### Estrutura dos Testes
+
+```
+tests/
+├── __init__.py         # Marca o diretório como pacote Python
+├── conftest.py         # Configurações dos testes
+├── test_models.py      # Testes dos modelos
+├── test_repository.py  # Testes do repositório
+└── test_service.py     # Testes dos serviços
+```
+
+### Observações sobre os Testes
+
+- Os testes são executados em um banco de dados de teste
+- Cada teste é executado em uma transação isolada
+- Os dados de teste são limpos após cada execução
+- Os logs de erro são salvos em `logs/test.log`
+- Certifique-se de que o PYTHONPATH está configurado corretamente
+
+## Operações CRUD Implementadas
+
+### Create (Inserção)
+```python
+# Exemplo de inserção de registro de sensor
+def insert_sensor_record(soil_moisture, ph_level, phosphorus, potassium, irrigation):
+    record = SensorRecord(
+        soil_moisture=soil_moisture,
+        ph_level=ph_level,
+        phosphorus_level=phosphorus,
+        potassium_level=potassium,
+        irrigation_active=irrigation
+    )
+    db.session.add(record)
+    db.session.commit()
+```
+
+### Read (Consulta)
+```python
+# Exemplo de consulta de registros
+def get_sensor_records(start_date, end_date):
+    return SensorRecord.query.filter(
+        SensorRecord.timestamp.between(start_date, end_date)
+    ).all()
+```
+
+### Update (Atualização)
+```python
+# Exemplo de atualização de registro
+def update_sensor_record(record_id, new_values):
+    record = SensorRecord.query.get(record_id)
+    for key, value in new_values.items():
+        setattr(record, key, value)
+    db.session.commit()
+```
+
+### Delete (Remoção)
+```python
+# Exemplo de remoção de registro
+def delete_sensor_record(record_id):
+    record = SensorRecord.query.get(record_id)
+    db.session.delete(record)
+    db.session.commit()
 ```
 ## Justificativa das Escolhas
 
