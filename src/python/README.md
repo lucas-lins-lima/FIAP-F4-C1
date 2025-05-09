@@ -167,3 +167,33 @@ Para executar o exemplo:
 ```bash
 python examples/repository_example.py
 ```
+## Justificativa das Escolhas
+
+1. **SQLAlchemy como ORM**
+   - Facilita o mapeamento objeto-relacional
+   - Fornece abstração do banco de dados
+   - Suporta múltiplos bancos de dados
+
+2. **Estrutura de Tabelas**
+   - Normalização para evitar redundância
+   - Índices para otimização de consultas
+   - Timestamps para rastreamento
+
+3. **Validações**
+   - Verificação de tipos de dados
+   - Restrições de integridade
+   - Tratamento de erros
+
+4. **Docker para Desenvolvimento**
+   - Ambiente consistente entre desenvolvedores
+   - Fácil configuração do banco Oracle
+   - Isolamento de dependências
+
+## Observações
+
+- O sistema foi projetado para ser facilmente extensível
+- As operações CRUD são documentadas e testadas
+- O código segue as melhores práticas de Python
+- A estrutura do banco permite futuras expansões
+- O ambiente Docker facilita o desenvolvimento e testes
+
