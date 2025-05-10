@@ -1,97 +1,97 @@
 # Entrega 2: Armazenamento de Dados em Banco SQL com Python
 
-Este projeto implementa a camada de armazenamento e análise de dados do sistema de irrigação inteligente, focando na captura de dados do ESP32 e seu armazenamento em banco de dados SQL.
+Este projeto simula a coleta de dados agrícolas utilizando sensores físicos conectados a um ESP32.  
+A aplicação em Python foi desenvolvida para armazenar, visualizar e analisar esses dados em um banco de dados Oracle, seguindo boas práticas de arquitetura, organização e clean code.
 
-## Estrutura do Projeto
 
-```
-src/python/
-├── config/                    # Configurações do projeto
-│   ├── __init__.py
-│   └── settings.py           # Configurações gerais e constantes
-│
-├── database/                 # Camada de acesso a dados
-│   ├── __init__.py
-│   ├── models.py            # Definição dos modelos SQLAlchemy
-│   ├── oracle.py            # Configuração da conexão Oracle
-│   ├── setup.py             # Script de inicialização do banco
-│   └── repositories/        # Implementação dos repositórios
-│       ├── __init__.py
-│       ├── produtor_repository.py
-│       ├── cultura_repository.py
-│       ├── sensor_repository.py
-│       ├── leitura_sensor_repository.py
-│       └── aplicacao_repository.py
-│
-├── examples/                 # Exemplos de uso
-│   ├── __init__.py
-│   └── repository_example.py # Exemplo de uso dos repositórios
-│
-├── logs/                    # Logs do sistema
-│
-├── services/               # Camada de serviços
-│   ├── __init__.py
-│   ├── sensor_service.py   # Serviço de processamento de sensores
-│   ├── irrigation_service.py # Serviço de controle de irrigação
-│   ├── produtor_service.py # Serviço de gerenciamento de produtores
-│   ├── cultura_service.py  # Serviço de gerenciamento de culturas
-│   └── aplicacao_service.py # Serviço de gerenciamento de aplicações
-│
-├── tests/                  # Testes automatizados
-│   ├── __init__.py
-│   ├── conftest.py        # Configurações dos testes
-│   ├── test_models.py     # Testes dos modelos
-│   ├── test_repositories.py # Testes dos repositórios
-│   └── test_services.py   # Testes dos serviços
-│
-├── .env                    # Variáveis de ambiente
-├── .gitignore             # Arquivos ignorados pelo git
-├── Dockerfile             # Configuração do container
-├── main.py               # Ponto de entrada da aplicação
-├── pytest.ini            # Configuração do pytest
-├── README.md             # Documentação do projeto
-└── requirements.txt      # Dependências do projeto
+## Como Executar o Projeto
+
+### Pré-requisitos
+
+- [Python 3.9+](https://www.python.org/downloads/)
+- Oracle Instant Client instalado e configurado
+- Banco Oracle disponível (ou acesso ao banco simulado pela FIAP)
+- IDE recomendada: VSCode
+
+### Configuração do Ambiente
+
+1. **Clonar o projeto**:
+```bash
+git clone https://github.com/Hinten/fiap_fase3_cap1.git
+cd fiap_fase3_cap1
 ```
 
-### Descrição dos Diretórios
+2. **Criar e ativar ambiente virtual**:
+```bash
+# Linux/Mac
+python3 -m venv .venv
+source .venv/bin/activate
 
-#### config/
-Contém as configurações do projeto, incluindo:
-- Configurações do banco de dados
-- Constantes do sistema
-- Configurações de logging
-- Variáveis de ambiente
+# Windows
+python -m venv .venv
+.venv\Scripts\activate
+```
 
-#### database/
-Implementa a camada de acesso a dados:
-- `models.py`: Define as classes que mapeiam as tabelas do banco
-- `oracle.py`: Gerencia a conexão com o banco Oracle
-- `setup.py`: Script para inicialização do banco
-- `repositories/`: Implementa o padrão Repository para cada entidade
+3. **Instalar dependências**:
+```bash
+pip install -r requirements.txt
+```
 
-#### examples/
-Contém exemplos de uso do sistema:
-- Exemplos de uso dos repositórios
-- Exemplos de consultas complexas
-- Exemplos de integração com serviços
+4. **Configurar variáveis de ambiente**:
+Crie um arquivo `.env` na pasta `src/python` com as seguintes variáveis:
+```
+DB_USER=seu_usuario
+DB_PASSWORD=sua_senha
+DB_HOST=oracle.fiap.com.br
+DB_PORT=1521
+DB_SERVICE=ORCL
+```
 
-#### logs/
-Armazena os logs do sistema:
-- Logs da aplicação em produção
-- Logs dos testes
-- Logs de erro e debug
+5. **Inicializar o banco de dados**:
+```bash
+cd src/python
+PYTHONPATH=$PYTHONPATH:$(pwd) python3 -m database.setup
+```
 
-#### services/
-Implementa a lógica de negócio:
-- Processamento de dados dos sensores
-- Lógica de controle de irrigação
-- Regras de negócio do sistema
+Este script irá:
+- Criar todas as tabelas necessárias
+- Inicializar o banco com dados de exemplo
+- Configurar as conexões necessárias
 
-#### tests/
-Contém os testes automatizados:
-- Testes unitários
-- Testes de integração
-- Fixtures e configurações de teste
+6. **Executar o sistema**:
+```bash
+python main.py
+```
+
+### Executando os Testes
+
+Para executar os testes do projeto:
+
+```bash
+# Na pasta src/python
+PYTHONPATH=$PYTHONPATH:$(pwd) pytest
+```
+
+Opções adicionais de teste:
+```bash
+# Executar testes específicos
+pytest tests/database/
+pytest tests/services/
+
+# Executar com cobertura
+pytest --cov=.
+
+# Verificar logs dos testes
+pytest -v
+```
+
+### Executando a Dashboard
+
+Para iniciar a interface web do Streamlit:
+
+```bash
+streamlit run app_dashboard.py
+```
 
 ## Metas da Entrega
 
@@ -216,192 +216,6 @@ A estrutura do banco de dados foi projetada seguindo o MER desenvolvido na Fase 
   - Timestamps para rastreamento temporal
   - Campos opcionais em leitura_sensor para diferentes tipos de sensores
 
-## Como Executar
-
-1. **Configuração do Ambiente**
-   ```bash
-   cd src/python
-   pip install -r requirements.txt
-   ```
-
-2. **Configuração do Banco**
-
-   Você pode escolher entre usar um banco Oracle local ou usar a versão dockerizada:
-
-   ### Opção 1: Usando Docker (Recomendado)
-   
-   ```bash
-   # Na raiz do projeto
-   docker-compose up -d
-   ```
-   
-   Aguarde alguns minutos até o banco estar pronto (você pode verificar o status com `docker-compose ps`).
-   
-   Configure o arquivo `.env` na pasta `src/python` com as seguintes variáveis:
-   ```bash
-   ORACLE_USER=system
-   ORACLE_PASSWORD=oracle
-   ORACLE_HOST=localhost
-   ORACLE_PORT=1521
-   ORACLE_SERVICE=XE
-   ```
-
-   ### Opção 2: Usando Oracle Local
-   
-   Se você preferir usar uma instalação local do Oracle, configure o arquivo `.env` com suas credenciais:
-   ```bash
-   ORACLE_USER=seu_usuario
-   ORACLE_PASSWORD=sua_senha
-   ORACLE_HOST=localhost
-   ORACLE_PORT=1521
-   ORACLE_SERVICE=XE
-   ```
-
-   ### Inicialização do Banco
-   
-   Após configurar o banco (seja via Docker ou local), execute:
-   ```bash
-   cd src/python
-   # Adiciona o diretório atual ao PYTHONPATH
-   export PYTHONPATH=$PYTHONPATH:$(pwd)
-   python database/setup.py
-   ```
-   
-   Este script irá:
-   - Criar todas as tabelas necessárias
-   - Inicializar o banco com dados de exemplo
-   - Configurar as conexões necessárias
-
-   Uma mensagem como essa deve aparecer:
-
-   ![Banco populado com sucesso](../../assets/banco-populado-com-sucesso.png)
-   
-
-   ### Comandos Docker Úteis
-   
-   ```bash
-   # Verificar status do container
-   docker-compose ps
-   
-   # Ver logs do banco
-   docker-compose logs -f oracle
-   
-   # Parar o banco
-   docker-compose down
-   
-   # Parar e remover os volumes (apaga todos os dados)
-   docker-compose down -v
-   ```
-
-## Executando os Testes
-
-O projeto inclui testes automatizados para garantir a qualidade do código. Para executar os testes:
-
-### Opção 1: Usando Docker (Recomendado)
-
-```bash
-# Na raiz do projeto
-docker-compose up --build tests
-```
-
-### Opção 2: Executando Localmente
-
-1. **Configurar o ambiente de testes**:
-   ```bash
-   cd src/python
-   # Adiciona o diretório atual ao PYTHONPATH
-   export PYTHONPATH=$PYTHONPATH:$(pwd)
-   ```
-
-2. **Executar todos os testes**:
-   ```bash
-   python -m pytest
-   ```
-
-3. **Executar testes específicos**:
-   ```bash
-   # Testes do banco de dados
-   python -m pytest tests/database/
-   
-   # Testes dos serviços
-   python -m pytest tests/services/
-   
-   # Teste específico
-   python -m pytest tests/database/test_models.py
-   ```
-
-4. **Executar testes com cobertura**:
-   ```bash
-   python -m pytest --cov=.
-   ```
-
-5. **Verificar logs dos testes**:
-   ```bash
-   python -m pytest -v
-   ```
-
-### Estrutura dos Testes
-
-```
-tests/
-├── __init__.py         # Marca o diretório como pacote Python
-├── conftest.py         # Configurações dos testes
-├── test_models.py      # Testes dos modelos
-├── test_repositories.py # Testes dos repositórios
-└── test_services.py    # Testes dos serviços
-```
-
-### Observações sobre os Testes
-
-- Os testes são executados em um banco de dados de teste
-- Cada teste é executado em uma transação isolada
-- Os dados de teste são limpos após cada execução
-- Os logs de erro são salvos em `logs/test.log`
-- Certifique-se de que o PYTHONPATH está configurado corretamente
-
-## Operações CRUD Implementadas
-
-### Create (Inserção)
-```python
-# Exemplo de inserção de registro de sensor
-def insert_sensor_record(soil_moisture, ph_level, phosphorus, potassium, irrigation):
-    record = SensorRecord.query.add(
-        soil_moisture=soil_moisture,
-        ph_level=ph_level,
-        phosphorus_level=phosphorus,
-        potassium_level=potassium,
-        irrigation_active=irrigation
-    )
-    db.session.commit()
-```
-
-### Read (Consulta)
-```python
-# Exemplo de consulta de registros
-def get_sensor_records(start_date, end_date):
-    return SensorRecord.query.filter(
-        SensorRecord.timestamp.between(start_date, end_date)
-    ).all()
-```
-
-### Update (Atualização)
-```python
-# Exemplo de atualização de registro
-def update_sensor_record(record_id, new_values):
-    record = SensorRecord.query.get(record_id)
-    for key, value in new_values.items():
-        setattr(record, key, value)
-    db.session.commit()
-```
-
-### Delete (Remoção)
-```python
-# Exemplo de remoção de registro
-def delete_sensor_record(record_id):
-    record = SensorRecord.query.get(record_id)
-    db.session.delete(record)
-    db.session.commit()
-```
 ## Justificativa das Escolhas
 
 1. **SQLAlchemy como ORM**
@@ -419,16 +233,99 @@ def delete_sensor_record(record_id):
    - Restrições de integridade
    - Tratamento de erros
 
-4. **Docker para Desenvolvimento**
-   - Ambiente consistente entre desenvolvedores
-   - Fácil configuração do banco Oracle
-   - Isolamento de dependências
-
 ## Observações
 
 - O sistema foi projetado para ser facilmente extensível
 - As operações CRUD são documentadas e testadas
 - O código segue as melhores práticas de Python
 - A estrutura do banco permite futuras expansões
-- O ambiente Docker facilita o desenvolvimento e testes
 
+## Estrutura do Projeto
+
+```
+src/python/
+├── config/                    # Configurações do projeto
+│   ├── __init__.py
+│   └── settings.py           # Configurações gerais e constantes
+│
+├── database/                 # Camada de acesso a dados
+│   ├── __init__.py
+│   ├── models.py            # Definição dos modelos SQLAlchemy
+│   ├── oracle.py            # Configuração da conexão Oracle
+│   ├── setup.py             # Script de inicialização do banco
+│   └── repositories/        # Implementação dos repositórios
+│       ├── __init__.py
+│       ├── produtor_repository.py
+│       ├── cultura_repository.py
+│       ├── sensor_repository.py
+│       ├── leitura_sensor_repository.py
+│       └── aplicacao_repository.py
+│
+├── examples/                 # Exemplos de uso
+│   ├── __init__.py
+│   └── repository_example.py # Exemplo de uso dos repositórios
+│
+├── logs/                    # Logs do sistema
+│
+├── services/               # Camada de serviços
+│   ├── __init__.py
+│   ├── sensor_service.py   # Serviço de processamento de sensores
+│   ├── irrigation_service.py # Serviço de controle de irrigação
+│   ├── produtor_service.py # Serviço de gerenciamento de produtores
+│   ├── cultura_service.py  # Serviço de gerenciamento de culturas
+│   └── aplicacao_service.py # Serviço de gerenciamento de aplicações
+│
+├── tests/                  # Testes automatizados
+│   ├── __init__.py
+│   ├── conftest.py        # Configurações dos testes
+│   ├── test_models.py     # Testes dos modelos
+│   ├── test_repositories.py # Testes dos repositórios
+│   └── test_services.py   # Testes dos serviços
+│
+├── .env                    # Variáveis de ambiente
+├── .gitignore             # Arquivos ignorados pelo git
+├── main.py               # Ponto de entrada da aplicação
+├── pytest.ini            # Configuração do pytest
+├── README.md             # Documentação do projeto
+└── requirements.txt      # Dependências do projeto
+```
+
+### Descrição dos Diretórios
+
+#### config/
+Contém as configurações do projeto, incluindo:
+- Configurações do banco de dados
+- Constantes do sistema
+- Configurações de logging
+- Variáveis de ambiente
+
+#### database/
+Implementa a camada de acesso a dados:
+- `models.py`: Define as classes que mapeiam as tabelas do banco
+- `oracle.py`: Gerencia a conexão com o banco Oracle
+- `setup.py`: Script para inicialização do banco
+- `repositories/`: Implementa o padrão Repository para cada entidade
+
+#### examples/
+Contém exemplos de uso do sistema:
+- Exemplos de uso dos repositórios
+- Exemplos de consultas complexas
+- Exemplos de integração com serviços
+
+#### logs/
+Armazena os logs do sistema:
+- Logs da aplicação em produção
+- Logs dos testes
+- Logs de erro e debug
+
+#### services/
+Implementa a lógica de negócio:
+- Processamento de dados dos sensores
+- Lógica de controle de irrigação
+- Regras de negócio do sistema
+
+#### tests/
+Contém os testes automatizados:
+- Testes unitários
+- Testes de integração
+- Fixtures e configurações de teste

@@ -35,6 +35,16 @@ class AplicacaoRepository:
     def get_by_type(self, tipo: str) -> List[Aplicacao]:
         return self.session.query(Aplicacao).filter(Aplicacao.tipo == tipo).all()
 
+    def update(self, id_aplicacao: int, **kwargs) -> Optional[Aplicacao]:
+        """Atualiza uma aplicação existente."""
+        aplicacao = self.get_by_id(id_aplicacao)
+        if aplicacao:
+            for key, value in kwargs.items():
+                if hasattr(aplicacao, key):
+                    setattr(aplicacao, key, value)
+            self.session.commit()
+        return aplicacao
+
     def delete(self, id_aplicacao: int) -> bool:
         aplicacao = self.get_by_id(id_aplicacao)
         if aplicacao:

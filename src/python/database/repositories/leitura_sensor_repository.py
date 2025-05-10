@@ -21,6 +21,16 @@ class LeituraSensorRepository:
         self.session.commit()
         return leitura
 
+    def update(self, id_leitura: int, **kwargs) -> Optional[LeituraSensor]:
+        leitura = self.get_by_id(id_leitura)
+        if leitura:
+            for key, value in kwargs.items():
+                if hasattr(leitura, key):
+                    setattr(leitura, key, value)
+            self.session.commit()
+            return leitura
+        return None
+
     def get_by_id(self, id_leitura: int) -> Optional[LeituraSensor]:
         return self.session.query(LeituraSensor).filter(LeituraSensor.id_leitura == id_leitura).first()
 

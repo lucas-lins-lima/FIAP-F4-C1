@@ -1,10 +1,23 @@
 """
-Pacote database para gerenciamento do banco de dados Oracle.
-""" 
-
-from .models import Produtor, Cultura, Sensor, LeituraSensor, Aplicacao
-from .oracle import get_session, close_session, Session
-from .setup import init_db
+Módulo de banco de dados para o sistema de monitoramento agrícola.
+"""
+from .models import (
+    Produtor,
+    Cultura,
+    Sensor,
+    LeituraSensor,
+    Aplicacao,
+    SensorData
+)
+from .repositories import (
+    ProdutorRepository,
+    CulturaRepository,
+    SensorRepository,
+    LeituraSensorRepository,
+    AplicacaoRepository,
+    SensorDataRepository
+)
+from .oracle import get_session, close_session, engine
 
 __all__ = [
     'Produtor',
@@ -12,8 +25,14 @@ __all__ = [
     'Sensor',
     'LeituraSensor',
     'Aplicacao',
+    'SensorData',
+    'ProdutorRepository',
+    'CulturaRepository',
+    'SensorRepository',
+    'LeituraSensorRepository',
+    'AplicacaoRepository',
+    'SensorDataRepository',
     'get_session',
     'close_session',
-    'Session',
-    'init_db'
+    'engine'
 ] 

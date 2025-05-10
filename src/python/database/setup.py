@@ -1,4 +1,4 @@
-from sqlalchemy import create_engine
+from sqlalchemy import create_engine, text
 from sqlalchemy.orm import sessionmaker
 from datetime import datetime, date
 import os
@@ -10,14 +10,34 @@ from .models import Base, Produtor, Cultura, Sensor, LeituraSensor, Aplicacao
 load_dotenv()
 
 # Configuração da conexão com o banco
-ORACLE_USER = os.getenv('ORACLE_USER', 'system')
-ORACLE_PASSWORD = os.getenv('ORACLE_PASSWORD', 'oracle')
-ORACLE_HOST = os.getenv('ORACLE_HOST', 'localhost')
-ORACLE_PORT = os.getenv('ORACLE_PORT', '1521')
-ORACLE_SERVICE = os.getenv('ORACLE_SERVICE', 'XE')
+DB_USER = os.getenv('DB_USER', 'system')
+DB_PASSWORD = os.getenv('DB_PASSWORD', 'oracle')
+DB_HOST = os.getenv('DB_HOST', 'localhost')
+DB_PORT = int(os.getenv('DB_PORT', '1521'))  # Convertendo para inteiro
+DB_SERVICE = os.getenv('DB_SERVICE', 'XE')
 
 # String de conexão
-DATABASE_URL = f"oracle://{ORACLE_USER}:{ORACLE_PASSWORD}@{ORACLE_HOST}:{ORACLE_PORT}/{ORACLE_SERVICE}"
+DATABASE_URL = f"oracle+cx_oracle://{DB_USER}:{DB_PASSWORD}@{DB_HOST}:{DB_PORT}/?service_name={DB_SERVICE}"
+
+def create_sequences(engine):
+    """Cria as sequências necessárias no banco de dados."""
+    sequences = [
+        "CREATE SEQUENCE produtor_seq START WITH 1 INCREMENT BY 1",
+        "CREATE SEQUENCE cultura_seq START WITH 1 INCREMENT BY 1",
+        "CREATE SEQUENCE sensor_seq START WITH 1 INCREMENT BY 1",
+        "CREATE SEQUENCE leitura_sensor_seq START WITH 1 INCREMENT BY 1",
+        "CREATE SEQUENCE aplicacao_seq START WITH 1 INCREMENT BY 1"
+    ]
+    
+    with engine.connect() as connection:
+        for seq in sequences:
+            try:
+                connection.execute(text(seq))
+                connection.commit()
+            except Exception as e:
+                print(f"Erro ao criar sequência: {e}")
+                # Se a sequência já existe, continua
+                continue
 
 def init_db():
     """Inicializa o banco de dados criando todas as tabelas."""

@@ -1,7 +1,6 @@
 import uuid
-from sqlalchemy import Column, String, Float, Boolean, DateTime, ForeignKey, Integer, Date
-from sqlalchemy.ext.declarative import declarative_base
-from sqlalchemy.orm import relationship
+from sqlalchemy import Column, String, Float, Boolean, DateTime, ForeignKey, Integer, Date, Sequence
+from sqlalchemy.orm import declarative_base, relationship
 from datetime import datetime, timezone
 
 
@@ -70,7 +69,7 @@ class ClimateData(Base):
 class Produtor(Base):
     __tablename__ = 'produtor'
 
-    id_produtor = Column(Integer, primary_key=True, autoincrement=True)
+    id_produtor = Column(Integer, Sequence('produtor_seq'), primary_key=True)
     nome = Column(String(200), nullable=False)
     email = Column(String(200), nullable=False)
     telefone = Column(String(30), nullable=False)
@@ -84,7 +83,7 @@ class Produtor(Base):
 class Cultura(Base):
     __tablename__ = 'cultura'
 
-    id_cultura = Column(Integer, primary_key=True, autoincrement=True)
+    id_cultura = Column(Integer, Sequence('cultura_seq'), primary_key=True)
     nome = Column(String(100), nullable=False)
     tipo = Column(String(50), nullable=False)
     data_inicio = Column(Date, nullable=False)
@@ -102,7 +101,7 @@ class Cultura(Base):
 class Sensor(Base):
     __tablename__ = 'sensor'
 
-    id_sensor = Column(Integer, primary_key=True, autoincrement=True)
+    id_sensor = Column(Integer, Sequence('sensor_seq'), primary_key=True)
     tipo = Column(String(50), nullable=False)
     modelo = Column(String(50), nullable=False)
     localizacao = Column(String(100), nullable=False)
@@ -118,7 +117,7 @@ class Sensor(Base):
 class LeituraSensor(Base):
     __tablename__ = 'leitura_sensor'
 
-    id_leitura = Column(Integer, primary_key=True, autoincrement=True)
+    id_leitura = Column(Integer, Sequence('leitura_sensor_seq'), primary_key=True)
     id_sensor = Column(Integer, ForeignKey('sensor.id_sensor'), nullable=False)
     data_hora = Column(DateTime, nullable=False, default=datetime.utcnow)
     valor_umidade = Column(Float)
@@ -135,7 +134,7 @@ class LeituraSensor(Base):
 class Aplicacao(Base):
     __tablename__ = 'aplicacao'
 
-    id_aplicacao = Column(Integer, primary_key=True, autoincrement=True)
+    id_aplicacao = Column(Integer, Sequence('aplicacao_seq'), primary_key=True)
     id_cultura = Column(Integer, ForeignKey('cultura.id_cultura'), nullable=False)
     data_hora = Column(DateTime, nullable=False, default=datetime.utcnow)
     tipo = Column(String(50), nullable=False)
@@ -146,3 +145,38 @@ class Aplicacao(Base):
 
     def __repr__(self):
         return f"<Aplicacao(id={self.id_aplicacao}, cultura={self.id_cultura}, tipo='{self.tipo}')>"
+
+class SensorData(Base):
+    __tablename__ = 'sensor_data'
+
+    id = Column(Integer, Sequence('sensor_data_seq'), primary_key=True)
+    soil_moisture = Column(Float, nullable=False)  # Umidade do solo (%)
+    ph_level = Column(Float, nullable=False)  # Nível de pH
+    phosphorus_level = Column(Float, nullable=True)  # Nível de fósforo
+    potassium_level = Column(Float, nullable=True)  # Nível de potássio
+    irrigation_active = Column(Boolean, nullable=False, default=lambda: False)  # Status da irrigação
+    timestamp = Column(DateTime, nullable=False, default=datetime.utcnow)
+
+    def __init__(self, **kwargs):
+        kwargs.setdefault('irrigation_active', False)
+        super().__init__(**kwargs)
+
+    def __repr__(self):
+        return f"<SensorData(id={self.id}, moisture={self.soil_moisture}, ph={self.ph_level})>"
+
+    def to_dict(self):
+        return {
+            'id': self.id,
+            'soil_moisture': self.soil_moisture,
+            'ph_level': self.ph_level,
+            'phosphorus_level': self.phosphorus_level,
+            'potassium_level': self.potassium_level,
+            'irrigation_active': self.irrigation_active,
+            'timestamp': self.timestamp.isoformat() if self.timestamp else None
+        }
+
+    @classmethod
+    def from_dict(cls, data_dict):
+        if 'timestamp' in data_dict and isinstance(data_dict['timestamp'], str):
+            data_dict['timestamp'] = datetime.fromisoformat(data_dict['timestamp'])
+        return cls(**data_dict)

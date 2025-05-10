@@ -6,20 +6,18 @@ import logging
 from typing import List, Optional, Dict
 from datetime import datetime, timedelta
 
-from ..database.models.sensor_data import SensorData
-from ..database.repositories.sensor_repository import SensorRepository
+from database.models import SensorData
+from database.repositories import SensorDataRepository
 from database import get_session, close_session
-from database.repositories import LeituraSensorRepository
 from config.settings import SENSOR_CONFIG
 
 logger = logging.getLogger(__name__)
 
 class SensorService:
 
-    def __init__(self):
+    def __init__(self, sensor_data_repo: SensorDataRepository = None):
         self.session = get_session()
-        self.sensor_repo = SensorRepository(self.session)
-        self.leitura_repo = LeituraSensorRepository(self.session)
+        self.sensor_data_repo = sensor_data_repo or SensorDataRepository(self.session)
 
     def process_sensor_data(self, sensor_data: SensorData) -> SensorData:
         # Lógica para determinar se a irrigação deve ser ativada
@@ -31,22 +29,22 @@ class SensorService:
         )
         
         sensor_data.irrigation_active = should_irrigate
-        return self.sensor_repo.create(sensor_data)
+        return self.sensor_data_repo.create(sensor_data)
 
     def get_sensor_data(self, id: int) -> Optional[SensorData]:
-        return self.sensor_repo.get_by_id(id)
+        return self.sensor_data_repo.get_by_id(id)
 
     def get_all_sensor_data(self) -> List[SensorData]:
-        return self.sensor_repo.get_all()
+        return self.sensor_data_repo.get_all()
 
     def update_sensor_data(self, sensor_data: SensorData) -> Optional[SensorData]:
-        return self.sensor_repo.update(sensor_data)
+        return self.sensor_data_repo.update(sensor_data)
 
     def delete_sensor_data(self, id: int) -> bool:
-        return self.sensor_repo.delete(id)
+        return self.sensor_data_repo.delete(id)
 
     def get_sensor_data_by_date_range(self, start_date: datetime, end_date: datetime) -> List[SensorData]:
-        return self.sensor_repo.get_by_date_range(start_date, end_date)
+        return self.sensor_data_repo.get_by_date_range(start_date, end_date)
 
     def get_sensor_statistics(self, start_date: datetime, end_date: datetime) -> dict:
         data = self.get_sensor_data_by_date_range(start_date, end_date)
@@ -86,7 +84,7 @@ class SensorService:
         """
         try:
             # Valida o sensor
-            sensor = self.sensor_repo.get_by_id(id_sensor)
+            sensor = self.sensor_data_repo.get_by_id(id_sensor)
             if not sensor:
                 logger.error(f"Sensor {id_sensor} não encontrado")
                 return None
@@ -97,8 +95,9 @@ class SensorService:
                 return None
 
             # Registra a leitura
-            leitura = self.leitura_repo.create(
+            leitura = self.sensor_data_repo.create(
                 id_sensor=id_sensor,
+                data_hora=datetime.now(),
                 valor_umidade=dados_validados.get('umidade'),
                 valor_ph=dados_validados.get('ph'),
                 valor_npk_fosforo=dados_validados.get('fosforo'),
