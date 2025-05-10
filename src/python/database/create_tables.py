@@ -13,7 +13,6 @@ def create_tables():
         raise
 
 def create_sequences():
-    """Cria as sequências necessárias no banco de dados."""
     sequences = [
         'produtor_seq',
         'cultura_seq',

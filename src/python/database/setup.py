@@ -20,7 +20,6 @@ DB_SERVICE = os.getenv('DB_SERVICE', 'XE')
 DATABASE_URL = f"oracle+cx_oracle://{DB_USER}:{DB_PASSWORD}@{DB_HOST}:{DB_PORT}/?service_name={DB_SERVICE}"
 
 def create_sequences(engine):
-    """Cria as sequências necessárias no banco de dados."""
     sequences = [
         "CREATE SEQUENCE produtor_seq START WITH 1 INCREMENT BY 1",
         "CREATE SEQUENCE cultura_seq START WITH 1 INCREMENT BY 1",

@@ -257,7 +257,6 @@ src/python/
 │   ├── conftest.py        # Configurações dos testes
 │   ├── test_models.py     # Testes dos modelos
 │   ├── test_repositories.py # Testes dos repositórios
-│   └── test_services.py   # Testes dos serviços
 │
 ├── .env                    # Variáveis de ambiente
 ├── .gitignore             # Arquivos ignorados pelo git

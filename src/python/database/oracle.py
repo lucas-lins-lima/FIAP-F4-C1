@@ -57,19 +57,16 @@ session_factory = sessionmaker(bind=engine)
 Session = scoped_session(session_factory)
 
 def get_session():
-    """Retorna uma nova sessão do banco de dados."""
     try:
         session = Session()
-        # Testa a conexão
         session.execute(text("SELECT 1 FROM DUAL"))
         return session
     except Exception as e:
         logger.error(f"Erro ao obter sessão: {str(e)}")
-        Session.remove()  # Limpa a sessão atual
+        Session.remove()  
         raise
 
 def close_session():
-    """Fecha a sessão atual."""
     try:
         Session.remove()
     except Exception as e:
