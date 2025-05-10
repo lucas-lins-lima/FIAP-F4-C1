@@ -17,7 +17,7 @@ A aplicação em Python foi desenvolvida para armazenar, visualizar e analisar e
 
 1. **Clonar o projeto**:
 ```bash
-git clone https://github.com/Hinten/fiap_fase3_cap1.git
+git clone hhttps://github.com/anacornachi/FIAP-F3-C1.git
 cd fiap_fase3_cap1
 ```
 
@@ -38,14 +38,8 @@ pip install -r requirements.txt
 ```
 
 4. **Configurar variáveis de ambiente**:
-Crie um arquivo `.env` na pasta `src/python` com as seguintes variáveis:
-```
-DB_USER=seu_usuario
-DB_PASSWORD=sua_senha
-DB_HOST=oracle.fiap.com.br
-DB_PORT=1521
-DB_SERVICE=ORCL
-```
+Crie um arquivo `.env` na pasta `src/python` com as variáveis do banco de dados da FIAP
+
 
 5. **Inicializar o banco de dados**:
 ```bash
@@ -72,25 +66,8 @@ Para executar os testes do projeto:
 PYTHONPATH=$PYTHONPATH:$(pwd) pytest
 ```
 
-Opções adicionais de teste:
-```bash
-# Executar testes específicos
-pytest tests/database/
-pytest tests/services/
-
-# Executar com cobertura
-pytest --cov=.
-
 # Verificar logs dos testes
 pytest -v
-```
-
-### Executando a Dashboard
-
-Para iniciar a interface web do Streamlit:
-
-```bash
-streamlit run app_dashboard.py
 ```
 
 ## Metas da Entrega

@@ -1,5 +1,5 @@
 import pytest
-from datetime import datetime, date
+from datetime import datetime, date, timedelta
 from sqlalchemy import text
 from database import get_session, close_session
 from database.models import (
@@ -185,6 +185,8 @@ def test_sensor_repository(sensor_repo, cultura_repo, produtor_repo, session):
     assert sensor_deletado is None
 
 def test_leitura_sensor_repository(leitura_repo, sensor_repo, cultura_repo, produtor_repo, session):
+    """Testa as operações do repositório de leituras de sensor."""
+    # Criar produtor, cultura e sensor para teste
     produtor = produtor_repo.create(
         nome="Pedro Lima",
         email="pedro.lima@email.com",
@@ -198,7 +200,7 @@ def test_leitura_sensor_repository(leitura_repo, sensor_repo, cultura_repo, prod
     )
     sensor = sensor_repo.create(
         tipo="NPK",
-        modelo="NPK-01",
+        modelo="NPK-2000",
         localizacao="Setor A",
         id_cultura=cultura.id_cultura
     )
@@ -208,8 +210,8 @@ def test_leitura_sensor_repository(leitura_repo, sensor_repo, cultura_repo, prod
         id_sensor=sensor.id_sensor,
         valor_umidade=45.5,
         valor_ph=6.8,
-        valor_npk_fosforo=15.2,
-        valor_npk_potassio=20.1
+        valor_npk_fosforo=15.0,
+        valor_npk_potassio=20.0
     )
     assert leitura.id_leitura is not None
     assert leitura.valor_umidade == 45.5
@@ -225,10 +227,22 @@ def test_leitura_sensor_repository(leitura_repo, sensor_repo, cultura_repo, prod
     assert leituras_sensor[0].id_leitura == leitura.id_leitura
     
     # Buscar por data
-    data_inicio = datetime.now().replace(hour=0, minute=0, second=0, microsecond=0)
-    data_fim = datetime.now().replace(hour=23, minute=59, second=59, microsecond=999999)
-    leituras_periodo = leitura_repo.get_by_date_range(data_inicio, data_fim)
-    assert len(leituras_periodo) > 0
+    data_inicio = datetime.now() - timedelta(days=1)
+    data_fim = datetime.now() + timedelta(days=1)
+    leituras_data = leitura_repo.get_by_date_range(data_inicio, data_fim)
+    assert len(leituras_data) > 0
+    
+    # Buscar última leitura
+    ultima_leitura = leitura_repo.get_latest_by_sensor(sensor.id_sensor)
+    assert ultima_leitura is not None
+    assert ultima_leitura.id_leitura == leitura.id_leitura
+    
+    # Buscar médias
+    medias = leitura_repo.get_average_values_by_sensor(sensor.id_sensor)
+    assert medias['umidade'] > 0
+    assert medias['ph'] > 0
+    assert medias['fosforo'] > 0
+    assert medias['potassio'] > 0
     
     # Atualizar
     leitura_repo.update(leitura.id_leitura, valor_umidade=50.0)

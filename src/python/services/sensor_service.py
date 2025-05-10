@@ -6,8 +6,8 @@ import logging
 from typing import List, Optional, Dict
 from datetime import datetime, timedelta
 
-from database.models import SensorData
-from database.repositories import SensorDataRepository
+from database.models import SensorData, Sensor
+from database.repositories import SensorDataRepository, SensorRepository, LeituraSensorRepository
 from database import get_session, close_session
 from config.settings import SENSOR_CONFIG
 
@@ -15,9 +15,13 @@ logger = logging.getLogger(__name__)
 
 class SensorService:
 
-    def __init__(self, sensor_data_repo: SensorDataRepository = None):
+    def __init__(self, sensor_repo: SensorRepository = None, 
+                 sensor_data_repo: SensorDataRepository = None,
+                 leitura_repo: LeituraSensorRepository = None):
         self.session = get_session()
+        self.sensor_repo = sensor_repo or SensorRepository(self.session)
         self.sensor_data_repo = sensor_data_repo or SensorDataRepository(self.session)
+        self.leitura_repo = leitura_repo or LeituraSensorRepository(self.session)
 
     def process_sensor_data(self, sensor_data: SensorData) -> SensorData:
         # Lógica para determinar se a irrigação deve ser ativada
@@ -84,7 +88,7 @@ class SensorService:
         """
         try:
             # Valida o sensor
-            sensor = self.sensor_data_repo.get_by_id(id_sensor)
+            sensor = self.sensor_repo.get_by_id(id_sensor)
             if not sensor:
                 logger.error(f"Sensor {id_sensor} não encontrado")
                 return None
@@ -95,9 +99,8 @@ class SensorService:
                 return None
 
             # Registra a leitura
-            leitura = self.sensor_data_repo.create(
+            leitura = self.leitura_repo.create(
                 id_sensor=id_sensor,
-                data_hora=datetime.now(),
                 valor_umidade=dados_validados.get('umidade'),
                 valor_ph=dados_validados.get('ph'),
                 valor_npk_fosforo=dados_validados.get('fosforo'),

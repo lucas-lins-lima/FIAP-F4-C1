@@ -1,6 +1,7 @@
 from typing import List, Optional
 from datetime import datetime
 from sqlalchemy.orm import Session
+from sqlalchemy import func
 from ..models import LeituraSensor
 
 class LeituraSensorRepository:
@@ -60,14 +61,19 @@ class LeituraSensorRepository:
 
     def get_average_values_by_sensor(self, id_sensor: int, start_date: datetime = None, 
                                    end_date: datetime = None) -> dict:
-        query = self.session.query(LeituraSensor).filter(LeituraSensor.id_sensor == id_sensor)
+        query = self.session.query(
+            func.avg(LeituraSensor.valor_umidade).label('umidade'),
+            func.avg(LeituraSensor.valor_ph).label('ph'),
+            func.avg(LeituraSensor.valor_npk_fosforo).label('fosforo'),
+            func.avg(LeituraSensor.valor_npk_potassio).label('potassio')
+        ).filter(LeituraSensor.id_sensor == id_sensor)
         
         if start_date and end_date:
             query = query.filter(LeituraSensor.data_hora.between(start_date, end_date))
         
-        leituras = query.all()
+        result = query.first()
         
-        if not leituras:
+        if not result or not any([result.umidade, result.ph, result.fosforo, result.potassio]):
             return {
                 'umidade': 0,
                 'ph': 0,
@@ -76,8 +82,8 @@ class LeituraSensorRepository:
             }
         
         return {
-            'umidade': sum(l.valor_umidade or 0 for l in leituras) / len(leituras),
-            'ph': sum(l.valor_ph or 0 for l in leituras) / len(leituras),
-            'fosforo': sum(l.valor_npk_fosforo or 0 for l in leituras) / len(leituras),
-            'potassio': sum(l.valor_npk_potassio or 0 for l in leituras) / len(leituras)
+            'umidade': float(result.umidade or 0),
+            'ph': float(result.ph or 0),
+            'fosforo': float(result.fosforo or 0),
+            'potassio': float(result.potassio or 0)
         } 
