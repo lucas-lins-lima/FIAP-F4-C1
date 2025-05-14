@@ -67,7 +67,7 @@ Para mais detalhes sobre cada parte, consulte os READMEs específicos:
 
 [📘 README do projeto ESP32](src/esp32/README.md)
 
-[🐍 README do projeto Python](src/python/README.md)
+[🐍 README do projeto Python + Dashboard](src/python/README.md)
 
 ## 🔧 Como executar o código
 
