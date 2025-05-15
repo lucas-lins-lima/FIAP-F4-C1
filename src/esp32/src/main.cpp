@@ -23,16 +23,6 @@ bool rain_forecast = false;
 float air_humidity = 0.0;
 float temperature = 0.0;
 
-// Simulação de dados climáticos vindos do Python
-const char* climate_json = R"(
-  {
-    "temperature": 26.5,
-    "air_humidity": 82,
-    "rain_forecast": true
-  }
-)";
-
-
 void setup() {
   Serial.begin(115200);
 
@@ -49,7 +39,7 @@ void setup() {
   Serial.println("Sistema de irrigação inteligente inicializado");
 
   // Simula dados climáticos vindos de script Python (como se fossem enviados via porta serial)
-  String climate_json = "{\"temperature\": 22.5, \"air_humidity\": 75.0, \"rain_forecast\": true}";
+  String climate_json = "{\"temperature\": 22.5, \"air_humidity\": 75.0, \"rain_forecast\": false}";
 
   // Parseia os dados recebidos
   StaticJsonDocument<200> doc;

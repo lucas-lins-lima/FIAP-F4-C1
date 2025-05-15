@@ -95,6 +95,12 @@ Essa conversão é baseada na interpolação proporcional, considerando que valo
   - Decide acionar ou desligar a bomba de irrigação conforme a lógica implementada.
   - Atualiza o status do LED vermelho conforme a irrigação ativa ou inativa.
 
+## Video do funcionamento
+
+Compilação e execução do projeto utilizando PIO e Wokwi
+
+[Circuito no Wokwi (vídeo)](../../assets/circuito-esp32-wokwi.mp4)
+
 ## Lógica de controle da irrigação - Embasamento técnico
 
 A decisão de irrigar ou não foi baseada em materiais técnicos reais:
@@ -163,25 +169,13 @@ Esses dados são interpretados no setup() do C++ e usados para tomar decisões n
 Para simular diferentes condições climáticas, você pode alterar diretamente o conteúdo do JSON usado no código main.cpp. Por padrão, o código usa os seguintes dados:
 
 ```cpp
-const char* climate_json = R"(
-{
-    "temperature": 26.5,
-    "air_humidity": 82,
-    "rain_forecast": true
-}
-)";
+String climate_json = "{\"temperature\": 22.5, \"air_humidity\": 75.0, \"rain_forecast\": false}";
 ```
 
-Se quiser testar diferentes cenários, como simular ausência de chuva ou mudanças na temperatura e umidade do ar, altere esse trecho para refletir os novos dados, por exemplo:
+Se quiser testar diferentes cenários, como simular presença de chuva ou mudanças na temperatura e umidade do ar, altere esse trecho para refletir os novos dados, por exemplo:
 
 ```cpp
-const char\* climate_json = R"(
-{
-"temperature": 30.0,
-"air_humidity": 40,
-"rain_forecast": false
-}
-)";
+ String climate_json = "{\"temperature\": 30.0, \"air_humidity\": 40, \"rain_forecast\": true}";
 ```
 
 Depois de fazer essa alteração, carregue o código novamente no ESP32 para aplicar as novas condições. Lembre-se de que o sistema de irrigação toma decisões com base nesses dados, como:
