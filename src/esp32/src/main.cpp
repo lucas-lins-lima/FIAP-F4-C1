@@ -32,7 +32,6 @@ const char* climate_json = R"(
   }
 )";
 
-bool rain_forecast = false;
 
 void setup() {
   Serial.begin(115200);

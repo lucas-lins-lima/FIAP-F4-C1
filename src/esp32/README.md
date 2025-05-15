@@ -2,7 +2,7 @@
 
 Este projeto implementa um sistema de irrigação inteligente utilizando a plataforma ESP32, sensores simulados no ambiente Wokwi e integração com o PlatformIO no VSCode.
 
-O objetivo é criar um protótipo funcional capaz de **monitorar variáveis do solo** (umidade, nutrientes e pH) e **acionar a bomba de irrigação** conforme condições previamente estabelecidas.
+O objetivo é criar um protótipo funcional capaz de **monitorar variáveis do solo** (umidade, nutrientes e pH) e **acionar a bomba de irrigação** conforme condições previamente estabelecidas, usando tanto dados locais dos sensores quanto informações climáticas externas, simuladas via JSON.
 
 ## Objetivos da entrega 1
 
@@ -24,6 +24,15 @@ Portanto, todos os caminhos abaixo consideram como raiz o diretório src/esp32/.
 | `circuito-esp32-wokwi` | Imagem exportada do circuito                         |
 | `README.md`            | Documentação do projeto                              |
 
+## Requisitos do sistema
+
+Para executar este projeto, você precisará de:
+
+- VSCode com as extensões PlatformIO e Wokwi instaladas.
+- ESP32 (simulado no Wokwi).
+- Python 3.10+ para integração com dados externos (simulação via JSON).
+- PlatformIO CLI instalado.
+
 ## Como rodar o projeto
 
 1. Clone o repositório.
@@ -35,10 +44,11 @@ git clone https://github.com/anacornachi/FIAP-F3-C1.git
 2. Abra o projeto no VSCode
 
 ```bash
-cd FIAP-F3-C1
+cd FIAP-F3-C1/src/esp32
 ```
 
-3. Certifique-se de estar com as extensões Wokwi e PlatformIO instalada.
+3. Certifique-se de estar com as extensões Wokwi e PlatformIO instaladas.
+
 4. Compile o projeto:
 
 ```bash
@@ -64,6 +74,17 @@ Legenda dos componentes:
 | DHT22 | Umidade do solo | GPIO 5 | Sensor digital de umidade do solo |
 | Relé | Bomba de irrigação | GPIO 12 | Liga/desliga automaticamente |
 | LED | Status da irrigação | GPIO 13 | Aceso = bomba ativa |
+
+## Conversão de Lux para pH
+
+A conversão de lux (intensidade de luz) para pH é simulada usando um sensor LDR. O valor analógico é lido com a função analogRead() e mapeado para a escala de pH (0 a 14) usando a fórmula:
+
+```cpp
+int luxValue = analogRead(34);  // Leitura do sensor LDR
+float ph = ((float)luxValue / 4095.0) * 14.0;  // Conversão para pH
+```
+
+Essa conversão é baseada na interpolação proporcional, considerando que valores mais altos de lux indicam um solo mais básico (maior pH) e valores mais baixos representam acidez (menor pH).
 
 ## Funcionamento geral
 
@@ -137,6 +158,38 @@ Um script Python busca dados da cidade configurada (`.env`) e envia ao ESP32 via
 
 Esses dados são interpretados no setup() do C++ e usados para tomar decisões no loop().
 
+## Testando Dados Climáticos Simulados
+
+Para simular diferentes condições climáticas, você pode alterar diretamente o conteúdo do JSON usado no código main.cpp. Por padrão, o código usa os seguintes dados:
+
+```cpp
+const char* climate_json = R"(
+{
+    "temperature": 26.5,
+    "air_humidity": 82,
+    "rain_forecast": true
+}
+)";
+```
+
+Se quiser testar diferentes cenários, como simular ausência de chuva ou mudanças na temperatura e umidade do ar, altere esse trecho para refletir os novos dados, por exemplo:
+
+```cpp
+const char\* climate_json = R"(
+{
+"temperature": 30.0,
+"air_humidity": 40,
+"rain_forecast": false
+}
+)";
+```
+
+Depois de fazer essa alteração, carregue o código novamente no ESP32 para aplicar as novas condições. Lembre-se de que o sistema de irrigação toma decisões com base nesses dados, como:
+
+- Previsão de Chuva (`rain_forecast`): Se verdadeiro, a irrigação é cancelada.
+- Temperatura (`temperature`): Apenas exibida no monitor serial.
+- Umidade do Ar (`air_humidity`): Apenas exibida no monitor serial.
+
 ## Simulações sugeridas
 
 - Pressionar apenas o botão de fósforo com umidade baixa → irrigação deve ocorrer
@@ -166,3 +219,34 @@ A integração seria em tempo real com banco de dados e decisões automáticas
 - A conversão de lux para pH foi feita de forma simulada usando interpolação proporcional (`analogRead` mapeado para escala de pH 0–14).
 - O sistema foi programado para ser robusto mesmo em variações abruptas de leitura simulada.
 - As decisões foram embasadas em artigos técnicos agrícolas e guias acadêmicos para reforçar a lógica implementada.
+
+## ❌ Possíveis Problemas e Soluções
+
+Problema: `command not found: pio`
+
+Se você já instalou o PlatformIO no VSCode mas ainda assim recebe a mensagem command not found: pio ao tentar executar comandos no terminal, o problema pode ser que o PATH do seu sistema não inclui o diretório correto.
+
+Verifique se o PlatformIO está acessível:
+
+```bash
+which pio
+```
+
+Se não encontrar nada, adicione o caminho manualmente ao seu arquivo de configuração do terminal (por exemplo, ~/.zshrc no macOS):
+
+```bash
+echo 'export PATH=$HOME/.platformio/penv/bin:$PATH' >> ~/.zshrc
+source ~/.zshrc
+```
+
+Alternativamente, você pode criar um link simbólico para garantir que o comando esteja acessível:
+
+```nash
+sudo ln -s ~/.platformio/penv/bin/pio /usr/local/bin/pio
+```
+
+Se ainda não funcionar, tente reinstalar o PlatformIO via pip:
+
+```bash
+python3 -m pip install platformio
+```
