@@ -2,37 +2,37 @@
 Módulo de banco de dados para o sistema de monitoramento agrícola.
 """
 from .models import (
-    Produtor,
-    Cultura,
-    Sensor,
-    LeituraSensor,
-    Aplicacao,
-    SensorData
+    Component,
+    SensorRecord,
+    ClimateData,
+    Producer,
+    Crop,
+    Application
 )
 from .repositories import (
-    ProdutorRepository,
-    CulturaRepository,
-    SensorRepository,
-    LeituraSensorRepository,
-    AplicacaoRepository,
-    SensorDataRepository
+    ProducerRepository,
+    CropRepository,
+    ComponentRepository,
+    SensorRecordRepository,
+    ApplicationRepository,
+    ClimateDataRepository
 )
 from .oracle import get_session, close_session, engine
 
 __all__ = [
-    'Produtor',
-    'Cultura',
-    'Sensor',
-    'LeituraSensor',
-    'Aplicacao',
-    'SensorData',
-    'ProdutorRepository',
-    'CulturaRepository',
-    'SensorRepository',
-    'LeituraSensorRepository',
-    'AplicacaoRepository',
-    'SensorDataRepository',
+    'Component',
+    'SensorRecord',
+    'ClimateData',
+    'Producer',
+    'Crop',
+    'Application',
+    'ProducerRepository',
+    'CropRepository',
+    'ComponentRepository',
+    'SensorRecordRepository',
+    'ApplicationRepository',
+    'ClimateDataRepository',
     'get_session',
     'close_session',
     'engine'
-] 
+]

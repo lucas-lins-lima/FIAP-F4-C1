@@ -30,8 +30,6 @@ def send_to_serial(json_data: str):
         logger.exception(f"[ERRO] Erro inesperado ao enviar dados via serial: {e}")
 
 
-
-
 def fetch_weather_data():
     """
     Busca dados climáticos atuais da API OpenWeatherMap.
@@ -64,6 +62,7 @@ def fetch_weather_data():
         print(f"[ERRO] Erro inesperado: {e}")
 
     return None
+
 
 def run_weather_integration():
     """

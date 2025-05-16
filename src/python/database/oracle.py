@@ -10,15 +10,21 @@ logger = logging.getLogger(__name__)
 # Carrega variáveis de ambiente
 load_dotenv()
 
+required_vars = ["ORACLE_USER", "ORACLE_PASSWORD", "ORACLE_HOST", "ORACLE_PORT", "ORACLE_SERVICE"]
+missing_vars = [var for var in required_vars if not os.getenv(var)]
+
+if missing_vars:
+    raise EnvironmentError(f"Erro: Variáveis de ambiente ausentes - {', '.join(missing_vars)}.\nVerifique se o arquivo .env contém todas as configurações necessárias.")
+
 # Configuração da conexão com o banco
-ORACLE_USER = os.getenv('ORACLE_USER', 'system')
-ORACLE_PASSWORD = os.getenv('ORACLE_PASSWORD', 'oracle')
-ORACLE_HOST = os.getenv('ORACLE_HOST', 'localhost')
-ORACLE_PORT = os.getenv('ORACLE_PORT', '1521')
-ORACLE_SERVICE = os.getenv('ORACLE_SERVICE', 'XE')
+ORACLE_USER = os.getenv('ORACLE_USER')
+ORACLE_PASSWORD = os.getenv('ORACLE_PASSWORD')
+ORACLE_HOST = os.getenv('ORACLE_HOST')
+ORACLE_PORT = os.getenv('ORACLE_PORT')
+ORACLE_SERVICE = os.getenv('ORACLE_SERVICE')
 
 # String de conexão
-DATABASE_URL = f"oracle://{ORACLE_USER}:{ORACLE_PASSWORD}@{ORACLE_HOST}:{ORACLE_PORT}/{ORACLE_SERVICE}"
+DATABASE_URL = f"oracle+oracledb://{ORACLE_USER}:{ORACLE_PASSWORD}@{ORACLE_HOST}:{ORACLE_PORT}/{ORACLE_SERVICE}"
 
 # Configurações do engine
 ENGINE_CONFIG = {

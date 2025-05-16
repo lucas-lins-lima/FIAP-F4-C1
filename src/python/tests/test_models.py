@@ -1,77 +1,78 @@
 import pytest
 from datetime import datetime
+from database.models import SensorRecord
 
-from database.models import SensorData
-
-def test_sensor_data_creation():
+def test_sensor_record_creation():
     timestamp = datetime.now()
-    sensor_data = SensorData(
+    sensor_record = SensorRecord(
+        sensor_id="123e4567-e89b-12d3-a456-426614174000",
         soil_moisture=45.0,
-        ph_level=6.5,
-        phosphorus_level=1.0,
-        potassium_level=0.0,
-        irrigation_active=True,
+        soil_ph=6.5,
+        phosphorus_present=True,
+        potassium_present=False,
+        irrigation_status="ATIVADA",
         timestamp=timestamp
     )
 
-    assert sensor_data.soil_moisture == 45.0
-    assert sensor_data.ph_level == 6.5
-    assert sensor_data.phosphorus_level == 1.0
-    assert sensor_data.potassium_level == 0.0
-    assert sensor_data.irrigation_active is True
-    assert sensor_data.timestamp == timestamp
+    assert sensor_record.sensor_id == "123e4567-e89b-12d3-a456-426614174000"
+    assert sensor_record.soil_moisture == 45.0
+    assert sensor_record.soil_ph == 6.5
+    assert sensor_record.phosphorus_present is True
+    assert sensor_record.potassium_present is False
+    assert sensor_record.irrigation_status == "ATIVADA"
+    assert sensor_record.timestamp == timestamp
 
-def test_sensor_data_repr():
-    sensor_data = SensorData(
+def test_sensor_record_repr():
+    sensor_record = SensorRecord(
+        sensor_id="123e4567-e89b-12d3-a456-426614174000",
         soil_moisture=45.0,
-        ph_level=6.5,
-        phosphorus_level=1.0,
-        potassium_level=0.0,
-        irrigation_active=True
+        soil_ph=6.5,
+        phosphorus_present=True,
+        potassium_present=False,
+        irrigation_status="ATIVADA"
     )
 
-    expected_repr = f"<SensorData(id={sensor_data.id}, moisture=45.0, ph=6.5)>"
-    assert repr(sensor_data) == expected_repr
+    expected_repr = f"<SensorRecord(id={sensor_record.id}, moisture=45.0, ph=6.5)>"
+    assert repr(sensor_record) == expected_repr
 
-
-def test_sensor_data_to_dict():
+def test_sensor_record_to_dict():
     timestamp = datetime.now()
-    sensor_data = SensorData(
-        id=1,
+    sensor_record = SensorRecord(
+        sensor_id="123e4567-e89b-12d3-a456-426614174000",
         timestamp=timestamp,
-        phosphorus_level=True,
-        potassium_level=False,
-        ph_level=6.5,
+        phosphorus_present=True,
+        potassium_present=False,
+        soil_ph=6.5,
         soil_moisture=45.0,
-        irrigation_active=True
+        irrigation_status="ATIVADA"
     )
 
-    data_dict = sensor_data.to_dict()
-    assert data_dict['id'] == 1
+    data_dict = sensor_record.to_dict()
+    assert data_dict['sensor_id'] == "123e4567-e89b-12d3-a456-426614174000"
     assert data_dict['timestamp'] == timestamp.isoformat()
-    assert data_dict['phosphorus_level'] is True
-    assert data_dict['potassium_level'] is False
-    assert data_dict['ph_level'] == 6.5
+    assert data_dict['phosphorus_present'] is True
+    assert data_dict['potassium_present'] is False
+    assert data_dict['soil_ph'] == 6.5
     assert data_dict['soil_moisture'] == 45.0
-    assert data_dict['irrigation_active'] is True
+    assert data_dict['irrigation_status'] == "ATIVADA"
 
-def test_sensor_data_from_dict():
+def test_sensor_record_from_dict():
     timestamp = datetime.now()
     data_dict = {
-        'id': 1,
+        'sensor_id': "123e4567-e89b-12d3-a456-426614174000",
         'timestamp': timestamp.isoformat(),
-        'phosphorus_level': True,
-        'potassium_level': False,
-        'ph_level': 6.5,
+        'phosphorus_present': True,
+        'potassium_present': False,
+        'soil_ph': 6.5,
         'soil_moisture': 45.0,
-        'irrigation_active': True
+        'irrigation_status': "ATIVADA"
     }
 
-    sensor_data = SensorData.from_dict(data_dict)
-    assert sensor_data.id == 1
-    assert isinstance(sensor_data.timestamp, datetime)
-    assert sensor_data.phosphorus_level is True
-    assert sensor_data.potassium_level is False
-    assert sensor_data.ph_level == 6.5
-    assert sensor_data.soil_moisture == 45.0
-    assert sensor_data.irrigation_active is True 
+    sensor_record = SensorRecord.from_dict(data_dict)
+    assert sensor_record.sensor_id == "123e4567-e89b-12d3-a456-426614174000"
+    assert isinstance(sensor_record.timestamp, datetime)
+    assert sensor_record.phosphorus_present is True
+    assert sensor_record.potassium_present is False
+    assert sensor_record.soil_ph == 6.5
+    assert sensor_record.soil_moisture == 45.0
+    assert sensor_record.irrigation_status == "ATIVADA"

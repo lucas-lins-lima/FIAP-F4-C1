@@ -1,27 +1,40 @@
 from typing import List, Optional
+from sqlalchemy.orm import Session
+from sqlalchemy.exc import SQLAlchemyError
 
-from database.models import Component
-from database.oracle import db
+from database import ComponentRepository
 
-def create_component(data: dict) -> dict:
-    component = Component(
-        name=data['name'],
-        type=data['type']
-    )
-    db.session.add(component)
-    db.session.commit()
-    db.session.refresh(component)
-    return component.to_dict()
 
-def get_component(component_id: str) -> Optional[dict]:
-    return
+class ComponentService:
+    def __init__(self, session: Session):
+        self.repo = ComponentRepository(session)
 
-def list_components() -> List[dict]:
-    components = db.session.query(Component).all()
-    return [component.to_dict() for component in components]
+    def create_component(self, data: dict) -> dict:
+        try:
+            component = self.repo.create(name=data['name'], type=data['type'], crop_id=data.get('crop_id'))
+            return component.__dict__
+        except SQLAlchemyError as e:
+            self.repo.session.rollback()
+            raise e
 
-def update_component(component_id: str, data: dict) -> Optional[dict]:
-    return
+    def get_component(self, component_id: str) -> Optional[dict]:
+        component = self.repo.get_by_id(component_id)
+        return component.__dict__ if component else None
 
-def delete_component(component_id: str) -> bool:
-    return
+    def list_components(self) -> List[dict]:
+        return [component.__dict__ for component in self.repo.get_all()]
+
+    def update_component(self, component_id: str, data: dict) -> Optional[dict]:
+        try:
+            updated_component = self.repo.update(component_id, **data)
+            return updated_component.__dict__ if updated_component else None
+        except SQLAlchemyError as e:
+            self.repo.session.rollback()
+            raise e
+
+    def delete_component(self, component_id: str) -> bool:
+        try:
+            return self.repo.delete(component_id)
+        except SQLAlchemyError as e:
+            self.repo.session.rollback()
+            raise e

@@ -1,38 +1,51 @@
 import uuid
-from sqlalchemy import Column, String, Float, Boolean, DateTime, ForeignKey, Integer, Date, Sequence
+from sqlalchemy import Column, String, Float, Boolean, DateTime, ForeignKey, Date, Sequence
 from sqlalchemy.orm import declarative_base, relationship
-from datetime import datetime, timezone
-
+from datetime import datetime, timezone, timedelta
 
 Base = declarative_base()
+BRT = timezone(timedelta(hours=-3))
 
 # Tabela que representa o cadastro de sensores e atuadores físicos
 class Component(Base):
     __tablename__ = "components"
 
     id = Column(String(36), primary_key=True, default=lambda: str(uuid.uuid4()))
-    name = Column(String(50), nullable=False)  # Nome do componente
+    name = Column(String(50), nullable=False)
     type = Column(String(30), nullable=False)  # 'Sensor' ou 'Actuator'
+    crop_id = Column(String(36), ForeignKey("crops.id", ondelete="CASCADE"), nullable=True)
+
+    crop = relationship("Crop", back_populates="components")
+    records = relationship("SensorRecord", back_populates="sensor", cascade="all, delete-orphan")
 
     def to_dict(self):
         return {
             "id": self.id,
             "name": self.name,
             "type": self.type,
+            "crop_id": self.crop_id,
         }
 
+    def __repr__(self):
+        return f"<Component(id={self.id}, tipo='{self.type}')>"
 
 # Tabela que armazena os registros de sensores no solo
 class SensorRecord(Base):
     __tablename__ = "sensor_records"
 
     id = Column(String(36), primary_key=True, default=lambda: str(uuid.uuid4()))
-    timestamp = Column(DateTime, nullable=False, default=lambda: datetime.now(timezone.utc))  # Momento da coleta
-    soil_moisture = Column(Float, nullable=False)  # Umidade do solo (%)
-    phosphorus_present = Column(Boolean, nullable=False)  # Presença de fósforo
-    potassium_present = Column(Boolean, nullable=False)  # Presença de potássio
-    soil_ph = Column(Float, nullable=False)  # Valor de pH do solo
-    irrigation_status = Column(String(10), nullable=False)  # Status da irrigação (ATIVADA / DESLIGADA)
+    sensor_id = Column(String(36), ForeignKey("components.id", ondelete="CASCADE"), nullable=False)
+    timestamp = Column(DateTime, nullable=False, default=lambda: datetime.now(BRT))
+    soil_moisture = Column(Float, nullable=False)
+    phosphorus_present = Column(Boolean, nullable=False)
+    potassium_present = Column(Boolean, nullable=False)
+    soil_ph = Column(Float, nullable=False)
+    irrigation_status = Column(String(10), nullable=False, default="DESLIGADA")
+
+    sensor = relationship("Component", back_populates="records")
+
+    def __repr__(self):
+        return f"<SensorRecord(id={self.id}, moisture={self.soil_moisture}, ph={self.soil_ph})>"
 
     def to_dict(self):
         return {
@@ -43,21 +56,26 @@ class SensorRecord(Base):
             "potassium_present": self.potassium_present,
             "soil_ph": self.soil_ph,
             "irrigation_status": self.irrigation_status,
+            "sensor_id": self.sensor_id
         }
 
+    @classmethod
+    def from_dict(cls, data_dict):
+        if 'timestamp' in data_dict and isinstance(data_dict['timestamp'], str):
+            data_dict['timestamp'] = datetime.fromisoformat(data_dict['timestamp'])
+        return cls(**data_dict)
 
 # Tabela que armazena os dados meteorológicos obtidos de API externa
 class ClimateData(Base):
     __tablename__ = "climate_data"
 
     id = Column(String(36), primary_key=True, default=lambda: str(uuid.uuid4()))
-    timestamp = Column(DateTime, nullable=False, default=lambda: datetime.now(timezone.utc))  # Momento da coleta dos dados climáticos
-    temperature = Column(Float, nullable=False)  # Temperatura ambiente (°C)
-    air_humidity = Column(Float, nullable=False)  # Umidade do ar (%)
-    rain_forecast = Column(Boolean, nullable=False)  # Previsão de chuva (True/False)
+    timestamp = Column(DateTime, nullable=False, default=lambda: datetime.now(BRT))
+    temperature = Column(Float, nullable=False)
+    air_humidity = Column(Float, nullable=False)
+    rain_forecast = Column(Boolean, nullable=False)
 
     def to_dict(self):
-        
         return {
             "id": self.id,
             "timestamp": self.timestamp.isoformat(),
@@ -66,117 +84,49 @@ class ClimateData(Base):
             "rain_forecast": self.rain_forecast,
         }
 
-class Produtor(Base):
-    __tablename__ = 'produtor'
+# Tabela que armazena os dados dos produtores
+class Producer(Base):
+    __tablename__ = 'producers'
 
-    id_produtor = Column(Integer, Sequence('produtor_seq'), primary_key=True)
-    nome = Column(String(200), nullable=False)
+    id = Column(String(36), primary_key=True, default=lambda: str(uuid.uuid4()))
+    name = Column(String(200), nullable=False)
     email = Column(String(200), nullable=False)
-    telefone = Column(String(30), nullable=False)
+    phone = Column(String(30), nullable=False)
 
-    # Relacionamentos
-    culturas = relationship("Cultura", back_populates="produtor")
-
-    def __repr__(self):
-        return f"<Produtor(id={self.id_produtor}, nome='{self.nome}')>"
-
-class Cultura(Base):
-    __tablename__ = 'cultura'
-
-    id_cultura = Column(Integer, Sequence('cultura_seq'), primary_key=True)
-    nome = Column(String(100), nullable=False)
-    tipo = Column(String(50), nullable=False)
-    data_inicio = Column(Date, nullable=False)
-    data_fim = Column(Date)
-    id_produtor = Column(Integer, ForeignKey('produtor.id_produtor'), nullable=False)
-
-    # Relacionamentos
-    produtor = relationship("Produtor", back_populates="culturas")
-    sensores = relationship("Sensor", back_populates="cultura")
-    aplicacoes = relationship("Aplicacao", back_populates="cultura")
+    crops = relationship("Crop", back_populates="producer", cascade="all, delete-orphan")
 
     def __repr__(self):
-        return f"<Cultura(id={self.id_cultura}, nome='{self.nome}')>"
+        return f"<Producer(id={self.id}, name='{self.name}')>"
 
-class Sensor(Base):
-    __tablename__ = 'sensor'
+# Tabela que armazena os dados das culturas
+class Crop(Base):
+    __tablename__ = 'crops'
 
-    id_sensor = Column(Integer, Sequence('sensor_seq'), primary_key=True)
-    tipo = Column(String(50), nullable=False)
-    modelo = Column(String(50), nullable=False)
-    localizacao = Column(String(100), nullable=False)
-    id_cultura = Column(Integer, ForeignKey('cultura.id_cultura'), nullable=False)
+    id = Column(String(36), primary_key=True, default=lambda: str(uuid.uuid4()))
+    name = Column(String(100), nullable=False)
+    type = Column(String(50), nullable=False)
+    start_date = Column(Date, nullable=False)
+    end_date = Column(Date)
+    producer_id = Column(String(36), ForeignKey('producers.id', ondelete="CASCADE"), nullable=False)
 
-    # Relacionamentos
-    cultura = relationship("Cultura", back_populates="sensores")
-    leituras = relationship("LeituraSensor", back_populates="sensor")
-
-    def __repr__(self):
-        return f"<Sensor(id={self.id_sensor}, tipo='{self.tipo}')>"
-
-class LeituraSensor(Base):
-    __tablename__ = 'leitura_sensor'
-
-    id_leitura = Column(Integer, Sequence('leitura_sensor_seq'), primary_key=True)
-    id_sensor = Column(Integer, ForeignKey('sensor.id_sensor'), nullable=False)
-    data_hora = Column(DateTime, nullable=False, default=datetime.utcnow)
-    valor_umidade = Column(Float)
-    valor_ph = Column(Float)
-    valor_npk_fosforo = Column(Float)
-    valor_npk_potassio = Column(Float)
-
-    # Relacionamentos
-    sensor = relationship("Sensor", back_populates="leituras")
+    producer = relationship("Producer", back_populates="crops")
+    components = relationship("Component", back_populates="crop", cascade="all, delete-orphan")
+    applications = relationship("Application", back_populates="crop", cascade="all, delete-orphan")
 
     def __repr__(self):
-        return f"<LeituraSensor(id={self.id_leitura}, sensor={self.id_sensor}, data={self.data_hora})>"
+        return f"<Crop(id={self.id}, name='{self.name}')>"
 
-class Aplicacao(Base):
-    __tablename__ = 'aplicacao'
+# Tabela que armazena os dados de aplicação de insumos, como fertilizantes, defensivos, etc.
+class Application(Base):
+    __tablename__ = 'applications'
 
-    id_aplicacao = Column(Integer, Sequence('aplicacao_seq'), primary_key=True)
-    id_cultura = Column(Integer, ForeignKey('cultura.id_cultura'), nullable=False)
-    data_hora = Column(DateTime, nullable=False, default=datetime.utcnow)
-    tipo = Column(String(50), nullable=False)
-    quantidade = Column(Float, nullable=False)
+    id = Column(String(36), primary_key=True, default=lambda: str(uuid.uuid4()))
+    crop_id = Column(String(36), ForeignKey('crops.id', ondelete="CASCADE"), nullable=False)
+    timestamp = Column(DateTime, nullable=False, default=lambda: datetime.now(BRT))
+    type = Column(String(50), nullable=False)
+    quantity = Column(Float, nullable=False)
 
-    # Relacionamentos
-    cultura = relationship("Cultura", back_populates="aplicacoes")
-
-    def __repr__(self):
-        return f"<Aplicacao(id={self.id_aplicacao}, cultura={self.id_cultura}, tipo='{self.tipo}')>"
-
-class SensorData(Base):
-    __tablename__ = 'sensor_data'
-
-    id = Column(Integer, Sequence('sensor_data_seq'), primary_key=True)
-    soil_moisture = Column(Float, nullable=False)  # Umidade do solo (%)
-    ph_level = Column(Float, nullable=False)  # Nível de pH
-    phosphorus_level = Column(Float, nullable=True)  # Nível de fósforo
-    potassium_level = Column(Float, nullable=True)  # Nível de potássio
-    irrigation_active = Column(Boolean, nullable=False, default=lambda: False)  # Status da irrigação
-    timestamp = Column(DateTime, nullable=False, default=datetime.utcnow)
-
-    def __init__(self, **kwargs):
-        kwargs.setdefault('irrigation_active', False)
-        super().__init__(**kwargs)
+    crop = relationship("Crop", back_populates="applications")
 
     def __repr__(self):
-        return f"<SensorData(id={self.id}, moisture={self.soil_moisture}, ph={self.ph_level})>"
-
-    def to_dict(self):
-        return {
-            'id': self.id,
-            'soil_moisture': self.soil_moisture,
-            'ph_level': self.ph_level,
-            'phosphorus_level': self.phosphorus_level,
-            'potassium_level': self.potassium_level,
-            'irrigation_active': self.irrigation_active,
-            'timestamp': self.timestamp.isoformat() if self.timestamp else None
-        }
-
-    @classmethod
-    def from_dict(cls, data_dict):
-        if 'timestamp' in data_dict and isinstance(data_dict['timestamp'], str):
-            data_dict['timestamp'] = datetime.fromisoformat(data_dict['timestamp'])
-        return cls(**data_dict)
+        return f"<Application(id={self.id}, crop={self.crop_id}, type='{self.type}')>"

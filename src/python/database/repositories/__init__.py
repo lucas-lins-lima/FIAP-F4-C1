@@ -1,15 +1,15 @@
-from .produtor_repository import ProdutorRepository
-from .cultura_repository import CulturaRepository
-from .sensor_repository import SensorRepository
-from .leitura_sensor_repository import LeituraSensorRepository
-from .aplicacao_repository import AplicacaoRepository
-from .sensor_data_repository import SensorDataRepository
+from .producer_repository import ProducerRepository
+from .crop_repository import CropRepository
+from .component_repository import ComponentRepository
+from .sensor_record_repository import SensorRecordRepository
+from .application_repository import ApplicationRepository
+from .climate_data_repository import ClimateDataRepository
 
 __all__ = [
-    'ProdutorRepository',
-    'CulturaRepository',
-    'SensorRepository',
-    'LeituraSensorRepository',
-    'AplicacaoRepository',
-    'SensorDataRepository'
-] 
+    'ProducerRepository',
+    'CropRepository',
+    'ComponentRepository',
+    'SensorRecordRepository',
+    'ApplicationRepository',
+    'ClimateDataRepository'
+]

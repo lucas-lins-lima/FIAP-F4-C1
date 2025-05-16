@@ -15,10 +15,10 @@ A aplicação em Python foi desenvolvida para armazenar, visualizar e analisar e
 
 ### Configuração do Ambiente
 
-1. **Clonar o projeto**:
+1. **Clonar o projeto e acessá-lo**:
 ```bash
-git clone hhttps://github.com/anacornachi/FIAP-F3-C1.git
-cd fiap_fase3_cap1
+git clone https://github.com/anacornachi/FIAP-F3-C1.git
+cd FIAP-F3-C1/src/python
 ```
 
 2. **Criar e ativar ambiente virtual**:
@@ -43,7 +43,6 @@ Crie um arquivo `.env` na pasta `src/python` com as variáveis do banco de dados
 
 5. **Inicializar o banco de dados**:
 ```bash
-cd src/python
 PYTHONPATH=$PYTHONPATH:$(pwd) python3 -m database.setup
 ```
 

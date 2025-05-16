@@ -1,187 +1,71 @@
-"""
-Serviço para processamento de dados dos sensores.
-"""
+from typing import Optional, List
+from sqlalchemy.orm import Session
+from sqlalchemy.exc import SQLAlchemyError
 
-import logging
-from typing import List, Optional, Dict
-from datetime import datetime, timedelta
+from database import SensorRecordRepository
 
-from database.models import SensorData, Sensor
-from database.repositories import SensorDataRepository, SensorRepository, LeituraSensorRepository
-from database import get_session, close_session
-from config.settings import SENSOR_CONFIG
 
-logger = logging.getLogger(__name__)
+class SensorRecordService:
+    def __init__(self, session: Session):
+        self.repo = SensorRecordRepository(session)
 
-class SensorService:
-
-    def __init__(self, sensor_repo: SensorRepository = None, 
-                 sensor_data_repo: SensorDataRepository = None,
-                 leitura_repo: LeituraSensorRepository = None):
-        self.session = get_session()
-        self.sensor_repo = sensor_repo or SensorRepository(self.session)
-        self.sensor_data_repo = sensor_data_repo or SensorDataRepository(self.session)
-        self.leitura_repo = leitura_repo or LeituraSensorRepository(self.session)
-
-    def process_sensor_data(self, sensor_data: SensorData) -> SensorData:
-        # Lógica para determinar se a irrigação deve ser ativada
-        should_irrigate = (
-            sensor_data.soil_moisture < 30.0 or  # Umidade muito baixa
-            (sensor_data.ph_level < 5.0 or sensor_data.ph_level > 8.0) or  # pH fora do ideal
-            not sensor_data.phosphorus_level or  # Falta de fósforo
-            not sensor_data.potassium_level  # Falta de potássio
-        )
-        
-        sensor_data.irrigation_active = should_irrigate
-        return self.sensor_data_repo.create(sensor_data)
-
-    def get_sensor_data(self, id: int) -> Optional[SensorData]:
-        return self.sensor_data_repo.get_by_id(id)
-
-    def get_all_sensor_data(self) -> List[SensorData]:
-        return self.sensor_data_repo.get_all()
-
-    def update_sensor_data(self, sensor_data: SensorData) -> Optional[SensorData]:
-        return self.sensor_data_repo.update(sensor_data)
-
-    def delete_sensor_data(self, id: int) -> bool:
-        return self.sensor_data_repo.delete(id)
-
-    def get_sensor_data_by_date_range(self, start_date: datetime, end_date: datetime) -> List[SensorData]:
-        return self.sensor_data_repo.get_by_date_range(start_date, end_date)
-
-    def get_sensor_statistics(self, start_date: datetime, end_date: datetime) -> dict:
-        data = self.get_sensor_data_by_date_range(start_date, end_date)
-        
-        if not data:
-            return {
-                'average_ph': 0,
-                'average_moisture': 0,
-                'irrigation_time_percentage': 0,
-                'phosphorus_deficiency_percentage': 0,
-                'potassium_deficiency_percentage': 0
-            }
-
-        total_records = len(data)
-        total_irrigation_time = sum(1 for d in data if d.irrigation_active)
-        total_phosphorus_deficiency = sum(1 for d in data if not d.phosphorus_level)
-        total_potassium_deficiency = sum(1 for d in data if not d.potassium_level)
-
-        return {
-            'average_ph': sum(d.ph_level for d in data) / total_records,
-            'average_moisture': sum(d.soil_moisture for d in data) / total_records,
-            'irrigation_time_percentage': (total_irrigation_time / total_records) * 100,
-            'phosphorus_deficiency_percentage': (total_phosphorus_deficiency / total_records) * 100,
-            'potassium_deficiency_percentage': (total_potassium_deficiency / total_records) * 100
-        }
-
-    def processar_leitura(self, id_sensor: int, dados: Dict[str, float]) -> Optional[Dict]:
-        """
-        Processa uma leitura de sensor e a armazena no banco de dados.
-        
-        Args:
-            id_sensor: ID do sensor que realizou a leitura
-            dados: Dicionário com os valores lidos (umidade, ph, fosforo, potassio)
-            
-        Returns:
-            Dict com os dados processados ou None em caso de erro
-        """
+    def create_sensor_record(self, data: dict) -> dict:
         try:
-            # Valida o sensor
-            sensor = self.sensor_repo.get_by_id(id_sensor)
-            if not sensor:
-                logger.error(f"Sensor {id_sensor} não encontrado")
-                return None
-
-            # Valida os dados
-            dados_validados = self._validar_dados(dados)
-            if not dados_validados:
-                return None
-
-            # Registra a leitura
-            leitura = self.leitura_repo.create(
-                id_sensor=id_sensor,
-                valor_umidade=dados_validados.get('umidade'),
-                valor_ph=dados_validados.get('ph'),
-                valor_npk_fosforo=dados_validados.get('fosforo'),
-                valor_npk_potassio=dados_validados.get('potassio')
+            record = self.repo.create(
+                sensor_id=data['sensor_id'],
+                soil_moisture=data['soil_moisture'],
+                phosphorus_present=data['phosphorus_present'],
+                potassium_present=data['potassium_present'],
+                soil_ph=data['soil_ph'],
+                irrigation_status=data.get('irrigation_status', 'DESLIGADA')
             )
+            record = self._process_irrigation_logic(record)
+            return record.__dict__
+        except SQLAlchemyError as e:
+            self.repo.session.rollback()
+            raise e
 
-            logger.info(f"Leitura registrada com sucesso: {leitura.id_leitura}")
-            return self._formatar_leitura(leitura)
+    def get_sensor_record(self, record_id: str) -> Optional[dict]:
+        record = self.repo.get_by_id(record_id)
+        return record.__dict__ if record else None
 
-        except Exception as e:
-            logger.error(f"Erro ao processar leitura: {str(e)}")
-            return None
-        finally:
-            close_session()
+    def list_sensor_records(self) -> List[dict]:
+        return [record.__dict__ for record in self.repo.get_all()]
 
-    def _validar_dados(self, dados: Dict[str, float]) -> Optional[Dict[str, float]]:
-        """
-        Valida os dados recebidos dos sensores.
-        
-        Args:
-            dados: Dicionário com os valores lidos
-            
-        Returns:
-            Dict com os dados validados ou None se inválidos
-        """
+    def update_sensor_record(self, record_id: str, data: dict) -> Optional[dict]:
         try:
-            dados_validados = {}
-            
-            # Valida umidade
-            if 'umidade' in dados:
-                umidade = float(dados['umidade'])
-                if SENSOR_CONFIG['umidade']['min'] <= umidade <= SENSOR_CONFIG['umidade']['max']:
-                    dados_validados['umidade'] = umidade
-                else:
-                    logger.warning(f"Umidade fora do intervalo válido: {umidade}")
+            updated_record = self.repo.update(record_id, **data)
+            if updated_record:
+                updated_record = self._process_irrigation_logic(updated_record)
+            return updated_record.__dict__ if updated_record else None
+        except SQLAlchemyError as e:
+            self.repo.session.rollback()
+            raise e
 
-            # Valida pH
-            if 'ph' in dados:
-                ph = float(dados['ph'])
-                if SENSOR_CONFIG['ph']['min'] <= ph <= SENSOR_CONFIG['ph']['max']:
-                    dados_validados['ph'] = ph
-                else:
-                    logger.warning(f"pH fora do intervalo válido: {ph}")
+    def delete_sensor_record(self, record_id: str) -> bool:
+        try:
+            return self.repo.delete(record_id)
+        except SQLAlchemyError as e:
+            self.repo.session.rollback()
+            raise e
 
-            # Valida NPK
-            if 'fosforo' in dados:
-                fosforo = float(dados['fosforo'])
-                if SENSOR_CONFIG['npk']['min'] <= fosforo <= SENSOR_CONFIG['npk']['max']:
-                    dados_validados['fosforo'] = fosforo
-                else:
-                    logger.warning(f"Fósforo fora do intervalo válido: {fosforo}")
+    def list_records_by_sensor(self, sensor_id: str) -> List[dict]:
+        return [record.__dict__ for record in self.repo.get_by_sensor(sensor_id)]
 
-            if 'potassio' in dados:
-                potassio = float(dados['potassio'])
-                if SENSOR_CONFIG['npk']['min'] <= potassio <= SENSOR_CONFIG['npk']['max']:
-                    dados_validados['potassio'] = potassio
-                else:
-                    logger.warning(f"Potássio fora do intervalo válido: {potassio}")
+    def get_latest_record_by_sensor(self, sensor_id: str) -> Optional[dict]:
+        record = self.repo.get_latest_by_sensor(sensor_id)
+        return record.__dict__ if record else None
 
-            return dados_validados
+    def get_average_values_by_sensor(self, sensor_id: str) -> dict:
+        return self.repo.get_average_values_by_sensor(sensor_id)
 
-        except (ValueError, TypeError) as e:
-            logger.error(f"Erro ao validar dados: {str(e)}")
-            return None
-
-    def _formatar_leitura(self, leitura) -> Dict:
-        """
-        Formata os dados da leitura para retorno.
-        
-        Args:
-            leitura: Objeto LeituraSensor
-            
-        Returns:
-            Dict com os dados formatados
-        """
-        return {
-            'id': leitura.id_leitura,
-            'sensor': leitura.id_sensor,
-            'data_hora': leitura.data_hora.isoformat(),
-            'umidade': leitura.valor_umidade,
-            'ph': leitura.valor_ph,
-            'fosforo': leitura.valor_npk_fosforo,
-            'potassio': leitura.valor_npk_potassio
-        }
+    def _process_irrigation_logic(self, record) -> SensorRecordRepository:
+        should_irrigate = (
+            record.soil_moisture < 30.0 or  # Umidade muito baixa
+            record.soil_ph < 5.0 or record.soil_ph > 8.0 or  # pH fora do ideal
+            not record.phosphorus_present or  # Falta de fósforo
+            not record.potassium_present  # Falta de potássio
+        )
+        record.irrigation_status = "ATIVADA" if should_irrigate else "DESLIGADA"
+        self.repo.session.commit()
+        return record
