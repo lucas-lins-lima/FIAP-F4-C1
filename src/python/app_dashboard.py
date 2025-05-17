@@ -3,20 +3,26 @@ import pandas as pd
 import matplotlib.pyplot as plt
 from datetime import datetime
 
-from services.climate_service import (
-    create_climate_data, list_climate_data, get_climate_data,
-    update_climate_data, delete_climate_data
-)
-from services.component_service import (
-    create_component, list_components, get_component,
-    update_component, delete_component
-)
-from services.sensor_service import (
-    create_sensor_record, list_sensor_records,
-    update_sensor_record, delete_sensor_record
-)
+from services.climate_service import ClimateService
+from services.component_service import ComponentService
+from services.sensor_service import SensorRecordService
+from services.application_service import ApplicationService
+from services.crops_service import CropService
+from services.producer_service import ProducerService
 
-from weasyprint import HTML
+from database.oracle import get_session
+
+session = get_session()
+
+application_service = ApplicationService(session)
+component_service = ComponentService(session)
+crop_service = CropService(session)
+producer_service = ProducerService(session)
+sensor_service = SensorRecordService(session)
+climate_service = ClimateService(session)
+
+
+# from weasyprint import HTML
 
 
 st.set_page_config(page_title="Dashboard Irrigação", layout="wide")
@@ -26,7 +32,7 @@ aba = st.sidebar.radio("Selecione a tabela para gerenciar:", ["Visão Geral", "D
 
 # ---------------------- VISÃO GERAL --------------------------
 if aba == "Visão Geral":
-        sensor_df = pd.DataFrame(list_sensor_records())
+        sensor_df = pd.DataFrame(sensor_service.list_sensor_records())
 
         if sensor_df.empty:
             st.info("Nenhum dado de sensor disponível para mostrar a situação atual da safra.")
@@ -61,7 +67,7 @@ if aba == "Visão Geral":
 # ---------------------- CLIMATE DATA -------------------------
 if aba == "Dados Climáticos":
     st.header("🌤️ Dados Climáticos")
-    df = pd.DataFrame(list_climate_data())
+    df = pd.DataFrame(climate_service.list_climate_data())
 
     if df.empty:
         st.info("Nenhum dado climático disponível.")
@@ -113,19 +119,19 @@ if aba == "Dados Climáticos":
             mime='text/csv'
         )
 
-        try:
-            html = df.to_html(index=False)
-            HTML(string=html).write_pdf("climate_data.pdf")
-            with open("climate_data.pdf", "rb") as f:
-                pdf_bytes = f.read()
-            st.download_button(
-                label="⬇️ Exportar como PDF",
-                data=pdf_bytes,
-                file_name='climate_data.pdf',
-                mime='application/pdf'
-            )
-        except Exception as e:
-            st.error(f"Erro ao gerar PDF: {e}")
+        # try:
+        #     html = df.to_html(index=False)
+        #     HTML(string=html).write_pdf("climate_data.pdf")
+        #     with open("climate_data.pdf", "rb") as f:
+        #         pdf_bytes = f.read()
+        #     st.download_button(
+        #         label="⬇️ Exportar como PDF",
+        #         data=pdf_bytes,
+        #         file_name='climate_data.pdf',
+        #         mime='application/pdf'
+        #     )
+        # except Exception as e:
+        #     st.error(f"Erro ao gerar PDF: {e}")
 
     with st.expander("Novo Registro Climático"):
         col1, col2, col3 = st.columns(3)
@@ -137,7 +143,7 @@ if aba == "Dados Climáticos":
             rain_forecast = st.checkbox("Previsão de chuva")
 
         if st.button("Cadastrar"):
-            record = create_climate_data({
+            record = climate_service.create_climate_data({
                 "temperature": temperature,
                 "air_humidity": air_humidity,
                 "rain_forecast": rain_forecast,
@@ -147,26 +153,26 @@ if aba == "Dados Climáticos":
             st.rerun()
 
     with st.expander("Editar ou remover registro climático"):
-        ids = [r["id"] for r in list_climate_data()]
+        ids = [r["id"] for r in climate_service.list_climate_data()]
         selected_id = st.selectbox("Selecione o registro:", ids)
         if selected_id:
-            registro = get_climate_data(selected_id)
+            registro = climate_service.get_climate_data(selected_id)
             temp = st.number_input("Nova Temperatura", value=registro["temperature"], format="%.2f")
             hum = st.number_input("Nova Umidade", value=registro["air_humidity"], format="%.2f")
             rain = st.checkbox("Chuva prevista", value=registro["rain_forecast"])
             if st.button("Atualizar"):
-                update_climate_data(selected_id, {"temperature": temp, "air_humidity": hum, "rain_forecast": rain})
+                climate_service.update_climate_data(selected_id, {"temperature": temp, "air_humidity": hum, "rain_forecast": rain})
                 st.success("Atualizado com sucesso!")
                 st.rerun()
             if st.button("Deletar"):
-                delete_climate_data(selected_id)
+                climate_service.delete_climate_data(selected_id)
                 st.success("Removido com sucesso!")
                 st.rerun()
 
 # ---------------------- SENSOR RECORDS -------------------------
 elif aba == "Registros de Sensores":
     st.header("🧪 Registros dos Sensores")
-    df = pd.DataFrame(list_sensor_records())
+    df = pd.DataFrame(sensor_service.list_sensor_records())
 
     if df.empty:
         st.info("Nenhum registro de sensor disponível.")
@@ -207,7 +213,7 @@ elif aba == "Registros de Sensores":
         ph = st.number_input("pH do solo", format="%.2f")
         status = st.selectbox("Status da irrigação", ["ATIVADA", "DESLIGADA"])
         if st.button("Cadastrar sensor"):
-            create_sensor_record({
+            sensor_service.create_sensor_record({
                 "soil_moisture": umidade,
                 "phosphorus_present": phos,
                 "potassium_present": pot,
@@ -219,7 +225,7 @@ elif aba == "Registros de Sensores":
             st.rerun()
 
     with st.expander("Editar ou remover registro existente"):
-        df = pd.DataFrame(list_sensor_records())
+        df = pd.DataFrame(sensor_service.list_sensor_records())
 
         if df.empty:
             st.info("Nenhum registro disponível.")
@@ -242,7 +248,7 @@ elif aba == "Registros de Sensores":
             col1, col2 = st.columns(2)
             with col1:
                 if st.button("Atualizar registro"):
-                    update_sensor_record(selected_row["id"], {
+                    sensor_service.update_sensor_record(selected_row["id"], {
                         "soil_moisture": new_umidade,
                         "phosphorus_present": new_phos,
                         "potassium_present": new_pot,
@@ -255,14 +261,14 @@ elif aba == "Registros de Sensores":
 
             with col2:
                 if st.button("❌ Remover este registro"):
-                    delete_sensor_record(selected_row["id"])
+                    sensor_service.delete_sensor_record(selected_row["id"])
                     st.warning("Registro removido com sucesso!")
                     st.rerun()
 
 # ---------------------- COMPONENTS -------------------------
 elif aba == "Componentes":
     st.header("🔧 Componentes")
-    df = pd.DataFrame(list_components())
+    df = pd.DataFrame(component_service.list_components())
     if df.empty:
         st.info("Nenhum componente disponível.")
     else:
@@ -272,12 +278,12 @@ elif aba == "Componentes":
         name = st.text_input("Nome do componente")
         type_ = st.selectbox("Tipo", ["Sensor", "Actuator"])
         if st.button("Cadastrar Componente"):
-            create_component({"name": name, "type": type_})
+            component_service.create_component({"name": name, "type": type_})
             st.success("Componente criado!")
             st.rerun()
 
     with st.expander("Editar ou remover componente"):
-        componentes = list_components()
+        componentes = component_service.list_components()
         ids = [r["id"] for r in componentes if r is not None]
 
         if not ids:
@@ -286,7 +292,7 @@ elif aba == "Componentes":
             selected_id = st.selectbox("Selecione o componente:", ids)
 
             if selected_id:
-                comp = get_component(selected_id)
+                comp = component_service.get_component(selected_id)
 
                 if comp is None:
                     st.error("Componente não encontrado.")
@@ -301,12 +307,12 @@ elif aba == "Componentes":
                     col1, col2 = st.columns(2)
                     with col1:
                         if st.button("Atualizar componente"):
-                            update_component(selected_id, {"name": new_name, "type": new_type})
+                            component_service.update_component(selected_id, {"name": new_name, "type": new_type})
                             st.success("Atualizado!")
                             st.rerun()
 
                     with col2:
                         if st.button("Deletar componente"):
-                            delete_component(selected_id)
+                            component_service.delete_component(selected_id)
                             st.success("Removido!")
                             st.rerun()
