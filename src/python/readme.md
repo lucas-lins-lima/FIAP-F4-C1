@@ -353,4 +353,3 @@ A integração com a API da OpenWeather permite que o sistema obtenha dados clim
 | 9d5af123-4c09-4b09-a123-6cdd1f6e4b6f | 2025-05-16T14:20:00-03:00 | 22.5        | 75.0         | false         |
 | 4b56ae23-3b78-4b09-a123-6cdd1f6e4b6f | 2025-05-16T14:25:00-03:00 | 18.0        | 85.0         | true          |
 
-
