@@ -258,6 +258,10 @@ Após executar o script `seed.py`, o banco será populado com dados iniciais par
 - Implementado com Streamlit. 
 - Inclui gráficos de tendência, filtros de dados e exportação para CSV.
 
+### Video da solução
+
+[Navegação da Dashboard + CRUD de dados climáticos (vídeo)](../../assets/navegacao+crud.mp4)
+
 Executando o Painel: 
 ```bash
 streamlit run app_dashboard.py
@@ -269,31 +273,29 @@ streamlit run app_dashboard.py
    - Utiliza colunas para exibir múltiplas métricas de forma compacta e organizada. 
    - Inclui ícones para status da irrigação (💧 para ativada e ⛔ para desligada).
 
-    🖼️ Tela inicial com todas as métricas preenchidas.
+    ![Visao geral](../../assets/visao-geral.png)
 
 2. Análise Climática (Dados Climáticos)
 
    - Gráficos de tendência para temperatura e umidade do ar.
    - Histogramas para distribuição de temperatura, facilitando a identificação de picos.
    - Gráficos de dispersão para analisar a correlação entre temperatura e umidade.
-   - Exportação dos dados em CSV e PDF diretamente da interface.
-
-   🖼️️Gráficos de tendência e dispersão com dados reais.
+   - Exportação dos dados em CSV diretamente da interface.
 
 3. Monitoramento de Nutrientes e Irrigação (Registros dos Sensores)
 
    - Gráficos de barras para visualizar a presença de fósforo e potássio.
    - Gráficos de linha para visualizar o histórico de ativação/desativação da irrigação. 
    - Possibilidade de editar e remover registros diretamente pelo painel.
-   
-   🖼️ Gráfico de barras mostrando a presença de nutrientes e gráfico de linha com histórico de irrigação.
+
+   ![Presenca de nutrientes](../../assets/nutrientes.png)
 
 4. Gerenciamento de Componentes (Componentes)
 
     - CRUD completo para componentes, incluindo sensores e atuadores. 
     - Visualização dos componentes cadastrados e edição em tempo real.
 
-    🖼️ Tela com lista de componentes cadastrados, incluindo sensores e atuadores.
+    ![Tela de gerenciamento de componentes](../../assets/componentes.png)
 
 ### 📊 Gráficos Disponíveis no Dashboard
 
@@ -306,12 +308,9 @@ streamlit run app_dashboard.py
 
 ### Funcionalidades de Exportação
 
-O dashboard permite exportar os dados em dois formatos:
-
-    - CSV: Para integração com outras ferramentas de análise. 
-    - PDF: Para relatórios formais ou apresentações. 
-
-    🖼️ Botões de exportação para CSV e PDF com dados simulados.
+O dashboard permite exportar os dados em formato CSV, para integração com outras ferramentas de análise. 
+   
+   ![Exportar para CSV](../../assets/csv-export.png) 
 
 ---
 

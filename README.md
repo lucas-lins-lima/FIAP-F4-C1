@@ -69,50 +69,88 @@ Para mais detalhes sobre cada parte, consulte os READMEs específicos:
 
 [🐍 README do projeto Python + Dashboard](src/python/README.md)
 
-## 🔧 Como executar o código
+## Entregas realizadas
 
-### Pré-requisitos:
+### Entrega 1 - Sistema de Sensores e Controle com ESP32
 
-- Python 3.10+
-- PlatformIO e Wokwi instalados no VSCode
-- Variáveis definidas em .env com:
+Implementação do sistema físico simulado no Wokwi com lógica em C++. Inclui sensores de umidade (DHT22), pH (LDR), fósforo e potássio (botões), e controle do relé para ativar a bomba de irrigação.
 
-```bash
-OPEN_WEATHER_API_KEY=
-OPEN_WEATHER_CITY=São Paulo
-```
+- **Pasta de desenvolvimento**: src/esp32
+- **Documentação Específica**: [📘 README do projeto ESP32](src/esp32/README.md)
 
-### Etapas gerais
+- **Metas**:
 
-1. Clone o repositório:
+  - Construir o circuito no Wokwi
+  - Desenvolver código em C++
+  - Documentar toda a lógica de controle
 
-```bash
-git clone https://github.com/anacornachi/FIAP-F3-C1.git
-```
+- **Entregáveis**:
 
-2. Execute o projeto ESP32 (via Wokwi):
-   Abra a pasta src/esp32 no VSCode e compile com
+  - Código C++ funcional
+  - Imagem do circuito no Wokwi
+  - Documentação detalhada
 
-```bash
-  cd src/esp32
-  pio run
-```
+  ![Circuito Wokwi](/assets/circuito-esp32-wokwi.png)
+  [Demonstração do circuito (video)](/assets/circuito-esp32-wokwi.mp4)
 
-3. Inicie a simulação com Wokwi: Start Simulator
+### Entrega 2 - Armazenamento de Dados em Banco SQL com Python
 
-4. Execute o projeto Python:
+Sistema completo de armazenamento, processamento e visualização de dados dos sensores. Inclui integração com a API OpenWeather, banco de dados relacional e dashboard para análise dos dados, escopos do ir além 1 e 2, a serem descritos abaixo.
 
-```bash
-cd src/python
-pip install -r requirements.txt
-python main.py
-```
+- **Pasta de desenvolvimento**: src/python
+- **Documentação Específica**: [🐍 README do projeto Python + Dashboard](src/python/README.md)
 
-5. Abra o dashboard de visualização:
+- **Metas**:
 
-```bash
-streamlit run app_dashboard.py
-```
+  - Criar scripts para armazenamento em SQL
+  - Implementar CRUD completo
+  - Justificar estrutura de dados e relacionar com o MER da fase anterio
+
+- **Entregáveis**:
+
+  - Script Python funcional
+  - Tabelas de exemplo com dados populados
+
+  ![Diagrama do banco de dados](/assets/diagram.png)
+
+### Ir Além 1 - Dashboard em Python
+
+Painel visual com gráficos interativos para análise dos dados dos sensores. Inclui gráficos de tendência, dispersão, barras e linha, além de exportação para CSV.
+
+- **Pasta de desenvolvimento**: src/python
+- **Documentação Específica**: [🐍 README do projeto Python + Dashboard](src/python/README.md)
+
+- **Metas**:
+
+  -Criar visualizações claras e intuitivas para dados coletados
+
+  - Permitir filtros e exportações
+
+- **Entregáveis**:
+
+  - Dashboard completo com gráficos interativos
+
+  ![Dashbaord com graficos](/assets/dashboard_tabela.png)
+
+### Ir Além 2 - Integração com API Pública
+
+Integração com a API da OpenWeather para dados climáticos em tempo real, permitindo decisões de irrigação mais inteligentes. Inclui lógica para desativação da bomba em caso de previsão de chuva.
+
+- **Pasta de desenvolvimento**: src/python
+- **Documentação Específica**: [🐍 README do projeto Python + Dashboard](src/python/README.md)
+
+- **Metas**:
+
+  -Criar integração robusta com API
+
+  - Implementar lógica condicional para irrigação
+  - Armazenar dados meteorológicos no banco
+
+- **Entregáveis**:
+
+  - Scripts Python para integração com API
+  - Tabelas populadas com dados climáticos
+  - Documentação detalhada
 
 ### 📌 Observações Finais
 
@@ -120,86 +158,18 @@ Como este projeto foi desenvolvido em um ambiente 100% simulado, não é possív
 
 Em um cenário real, essa comunicação seria feita com um ESP32 físico e uma conexão serial real utilizando pyserial.
 
-## 📊 Entrega 2: Armazenamento de Dados em Banco SQL com Python
-
-### Estrutura do Banco de Dados
-
-O sistema utiliza um banco de dados SQL para armazenar os dados coletados dos sensores. A estrutura foi projetada seguindo o MER (Modelo Entidade-Relacionamento) desenvolvido na Fase 2, com as seguintes tabelas principais:
-
-- **sensor_records**: Armazena as leituras dos sensores
-  - ID (chave primária)
-  - Timestamp
-  - Umidade do solo
-  - pH
-  - Presença de Fósforo (P)
-  - Presença de Potássio (K)
-  - Status da bomba
-
-- **climate_data**: Armazena dados meteorológicos
-  - ID (chave primária)
-  - Timestamp
-  - Temperatura
-  - Umidade do ar
-  - Precipitação
-
-### Operações CRUD
-
-O sistema implementa todas as operações CRUD básicas:
-
-1. **Create (Criar)**
-   - Inserção de novos registros de sensores
-   - Inserção de dados climáticos
-
-2. **Read (Ler)**
-   - Consulta de histórico de leituras
-   - Visualização de dados climáticos
-   - Análises estatísticas
-
-3. **Update (Atualizar)**
-   - Correção de registros incorretos
-   - Atualização de status da bomba
-
-4. **Delete (Remover)**
-   - Remoção de registros antigos
-   - Limpeza de dados inválidos
-
-### Dashboard Interativo
-
-O sistema inclui um dashboard desenvolvido com Streamlit que permite:
-
-- Visualização em tempo real dos dados dos sensores
-- Gráficos de tendência para cada variável
-- Exportação de dados para CSV/PDF
-- Interface para operações CRUD
-- Análises estatísticas básicas
-
-### Como Testar o Sistema
-
-1. **Simulação de Dados**:
-   ```bash
-   python src/python/simulate_sensors.py
-   ```
-
-2. **Visualização no Dashboard**:
-   ```bash
-   streamlit run src/python/app_dashboard.py
-   ```
-
-3. **Operações CRUD via CLI**:
-   ```bash
-   python src/python/db_operations.py
-   ```
-
-### Relação com o MER da Fase 2
-
-A implementação do banco de dados segue fielmente o MER desenvolvido na Fase 2, com algumas adaptações práticas:
-
-- Adição de timestamps para rastreamento temporal
-- Implementação de índices para otimização de consultas
-- Relacionamentos mantidos conforme especificação original
-
 ## 🗃 Histórico de lançamentos
 
+- 0.4.0 - 18/05/2025
+  - Ajustes na documentação, incluindo imagens e vídeos.
+  - Padronização dos nomes das tabelas e colunas para inglês.
+  - Correção do tipo de dado para fósforo e potássio.
+  - Atualização dos models, services e repositories para refletir essas mudanças.
+- 0.3.1 - 09/05/2025
+  - Justificativa para mudança no banco de dados.
+  - Criação dos repositories para todos os modelos com métodos CRUD completos e buscas específicas.
+  - Incremento nos services para aproveitar ao máximo os relacionamentos entre tabelas.
+  - Ajustes na documentação para refletir a nova estrutura do banco de dados.
 - 0.3.0 - 04/05/2025
   - ESP32 (src/esp32)
     - Suporte à integração com climate.json (simulação da API OpenWeather).
