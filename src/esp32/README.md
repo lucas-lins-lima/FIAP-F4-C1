@@ -244,3 +244,47 @@ Se ainda não funcionar, tente reinstalar o PlatformIO via pip:
 ```bash
 python3 -m pip install platformio
 ```
+
+## Atualizações da Fase 4
+
+Na Fase 4, o sistema ESP32 recebeu significativas melhorias, incluindo:
+- Adição de display LCD I2C
+- Implementação de Serial Plotter
+- Otimizações de memória e desempenho
+
+### Display LCD I2C
+
+Foi adicionado um display LCD 16x2 via I2C para mostrar informações críticas em tempo real:
+
+![Circuito com LCD I2C](../../assets/circuito-fase4.png)
+
+#### Conexões do LCD I2C:
+| Componente | Pino ESP32 | Descrição |
+|------------|------------|-----------|
+| LCD SDA    | GPIO 21    | Linha de dados I2C |
+| LCD SCL    | GPIO 22    | Clock I2C |
+| LCD VCC    | 3.3V       | Alimentação |
+| LCD GND    | GND        | Terra |
+
+#### Informações exibidas:
+- **Linha 1**: Umidade do solo e pH
+- **Linha 2**: Status de nutrientes (P e K) e estado da irrigação
+
+```cpp
+void updateLCD() {
+  lcd.clear();
+  lcd.setCursor(0, 0);
+  lcd.print(F("U:"));
+  lcd.print(humidity, 1);
+  lcd.print(F("% pH:"));
+  lcd.print(ph, 1);
+  
+  lcd.setCursor(0, 1);
+  lcd.print(F("P:"));
+  lcd.print(phosphorus_present ? F("S") : F("N"));
+  lcd.print(F(" K:"));
+  lcd.print(potassium_present ? F("S") : F("N"));
+  
+  lcd.setCursor(9, 1);
+  lcd.print(digitalRead(RELAY_PIN) == HIGH ? F("LIGADA") : F("DESL"));
+}
