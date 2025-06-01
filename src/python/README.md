@@ -352,3 +352,28 @@ A integração com a API da OpenWeather permite que o sistema obtenha dados clim
 | 9d5af123-4c09-4b09-a123-6cdd1f6e4b6f | 2025-05-16T14:20:00-03:00 | 22.5        | 75.0         | false         |
 | 4b56ae23-3b78-4b09-a123-6cdd1f6e4b6f | 2025-05-16T14:25:00-03:00 | 18.0        | 85.0         | true          |
 
+# Na Fase 4, implementamos novas funcionalidades para elevar o projeto a um nível mais avançado:
+
+- Modelo preditivo com **Scikit-learn**
+- Dashboard aprimorado com **Streamlit**
+- Análise inteligente e recomendações automáticas
+
+### Modelo Preditivo com Scikit-learn
+
+Implementamos um modelo de Machine Learning para predizer a necessidade de irrigação com base nos dados históricos:
+
+```python
+# prediction_model.py
+from sklearn.ensemble import RandomForestClassifier
+# ...
+
+class IrrigationPredictor:
+    def train(self):
+        """
+        Treina o modelo de predição de irrigação usando Random Forest.
+        """
+        X, y = self._prepare_data()
+        X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2)
+        
+        self.model = RandomForestClassifier(n_estimators=100)
+        self.model.fit(X_train_scaled, y_train)
