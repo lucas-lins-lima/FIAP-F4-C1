@@ -152,6 +152,31 @@ Integração com a API da OpenWeather para dados climáticos em tempo real, perm
   - Tabelas populadas com dados climáticos
   - Documentação detalhada
 
+### Fase 4 - Automação e Inteligência na FarmTech Solutions
+
+Esta fase traz avanços significativos no projeto, incorporando tecnologias como Scikit-learn, Streamlit aprimorado, e otimizações no ESP32.
+
+- **Pasta de desenvolvimento**: src/esp32 e src/python
+- **Documentação Específica**: [📘 README do projeto ESP32](src/esp32/README.md) e [🐍 README do projeto Python + Dashboard](src/python/README.md)
+
+- **Metas**:
+  - Incorporar Scikit-learn para predição de necessidade de irrigação
+  - Aprimorar o dashboard utilizando Streamlit
+  - Adicionar display LCD I2C no circuito ESP32
+  - Implementar monitoramento com Serial Plotter
+  - Otimizar o uso de memória no ESP32
+
+- **Entregáveis**:
+  - Código C++ otimizado com suporte a LCD I2C
+  - Implementação de Serial Plotter
+  - Modelo preditivo com Scikit-learn
+  - Dashboard avançado com Streamlit
+  - Documentação atualizada
+
+  ![Circuito com LCD I2C](/assets/circuito-fase4.png)
+  ![Tela de Predição](/assets/dashboard-predicao.png)
+  ![Serial Plotter](/assets/serial-plotter.png)
+  
 ### 📌 Observações Finais
 
 Como este projeto foi desenvolvido em um ambiente 100% simulado, não é possível estabelecer comunicação direta entre ESP32 e Python por porta serial. Para isso, utilizamos um arquivo climate.json como ponte de simulação dos dados meteorológicos.
@@ -160,6 +185,21 @@ Em um cenário real, essa comunicação seria feita com um ESP32 físico e uma c
 
 ## 🗃 Histórico de lançamentos
 
+- 0.5.0 - 01/06/2025
+  - ESP32 (src/esp32)
+    - Adição de display LCD I2C para visualização local de informações
+    - Implementação de formatação para Serial Plotter
+    - Otimização do código C++ para eficiência de memória
+    - Documentação das otimizações e monitoramento
+  - Python (src/python)
+    - Implementação de modelo preditivo com Scikit-learn
+    - Previsão inteligente de necessidade de irrigação
+    - Programação automática de horários ótimos para irrigação
+    - Dashboard aprimorado com visualizações avançadas e interativas
+  - Geral:
+    - Documentação atualizada com explicações sobre o modelo ML
+    - Testes e validações do sistema integrado
+    - Vídeo demonstrativo da solução completa
 - 0.4.0 - 18/05/2025
   - Ajustes na documentação, incluindo imagens e vídeos.
   - Padronização dos nomes das tabelas e colunas para inglês.
