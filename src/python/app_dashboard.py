@@ -221,7 +221,7 @@ elif aba == "Registros de Sensores":
                 "potassium_present": pot,
                 "soil_ph": ph,
                 "irrigation_status": status,
-                "timestamp": datetime()
+                "timestamp": datetime.now()  # Correção
             })
             st.success("Sensor cadastrado!")
             st.rerun()
